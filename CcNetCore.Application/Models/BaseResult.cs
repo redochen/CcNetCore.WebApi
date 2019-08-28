@@ -38,6 +38,13 @@ namespace CcNetCore.Application.Models {
         public T Data { get; set; }
     }
 
+    public static class Results {
+        public static readonly IResult InternalError = "内部错误".ToResult ();
+        public static readonly IResult InvalidIdentity = "账号或密码错误".ToResult ();
+        public static readonly IResult ForbiddenAccount = "账号已被禁用".ToResult ();
+        public static readonly IResult LockedAccount = "账号已被锁定".ToResult ();
+    }
+
     public static class ResultExtension {
         /// <summary>
         /// 设置错误信息
@@ -54,6 +61,14 @@ namespace CcNetCore.Application.Models {
         /// <returns></returns>
         public static BaseResult ToResult (this Exception ex) =>
             ex.ToResult<BaseResult> ();
+
+        /// <summary>
+        /// 设置错误信息
+        /// </summary>
+        /// <param name="error">错误信息</param>
+        /// <returns></returns>
+        public static BaseResult ToResult (this string error) =>
+            error.ToResult<BaseResult> ();
 
         /// <summary>
         /// 获取结果
@@ -79,6 +94,20 @@ namespace CcNetCore.Application.Models {
         where TResult : IResult, new () {
             var result = new TResult ();
             result.SetError (ex);
+
+            return result;
+        }
+
+        /// <summary>
+        /// 获取结果
+        /// </summary>
+        /// <param name="error">错误信息</param>
+        /// <typeparam name="TResult"></typeparam>
+        /// <returns></returns>
+        public static TResult ToResult<TResult> (this string error)
+        where TResult : IResult, new () {
+            var result = new TResult ();
+            result.SetError (error);
 
             return result;
         }

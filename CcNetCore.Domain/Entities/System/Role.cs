@@ -1,5 +1,7 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using CcNetCore.Utils.Attributes;
+using CcNetCore.Utils.Converters;
 
 using Schema = System.ComponentModel.DataAnnotations.Schema;
 
@@ -33,12 +35,14 @@ namespace CcNetCore.Domain.Entities {
         /// <summary>
         /// 是否是超级管理员(超级管理员拥有系统的所有权限)
         /// </summary>
+        [TypeConverter (typeof (NullableBoolTypeConverter))]
         [Column ("is_super_admin")]
         public bool? IsSuperAdmin { get; set; }
 
         /// <summary>
         /// 是否是系统内置角色(系统内置角色不允许删除,修改操作)
         /// </summary>
+        [TypeConverter (typeof (NullableBoolTypeConverter))]
         [Column ("is_builtin")]
         public bool? IsBuiltin { get; set; }
     }

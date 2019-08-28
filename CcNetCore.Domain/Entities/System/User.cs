@@ -1,6 +1,8 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using CcNetCore.Common;
 using CcNetCore.Utils.Attributes;
+using CcNetCore.Utils.Converters;
 
 using Schema = System.ComponentModel.DataAnnotations.Schema;
 
@@ -46,5 +48,13 @@ namespace CcNetCore.Domain.Entities {
         /// </summary>
         [Column ("user_desc", VarLength = 500, Unicode = true)]
         public string Description { get; set; }
+
+        /// <summary>
+        /// 是否已锁定
+        /// </summary>
+        /// <value></value>
+        [TypeConverter (typeof (NullableBoolTypeConverter))]
+        [Column ("is_locked")]
+        public bool? IsLocked { get; set; }
     }
 }

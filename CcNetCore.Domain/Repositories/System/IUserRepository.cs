@@ -10,9 +10,8 @@ namespace CcNetCore.Domain.Repositories {
         /// 验证用户
         /// </summary>
         /// <param name="user"></param>
-        /// <param name="userID">用户ID</param>
         /// <returns></returns>
-        Exception VerifyUser (UserDto user, out int userID);
+        (UserDto, Exception) VerifyUser (UserDto user);
 
         /// <summary>
         /// 修改密码

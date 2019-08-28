@@ -55,5 +55,17 @@ namespace CcNetCore.Application {
                 result.SetError (ErrorCode.Success);
             }
         }
+
+        /// <summary>
+        /// 设置错误信息
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="error">错误信息</param>
+        public static void SetError (this IResult result, string error) {
+            result.SetError (ErrorCode.Failed);
+            if (error.IsValid ()) {
+                result.Message = error;
+            }
+        }
     }
 }

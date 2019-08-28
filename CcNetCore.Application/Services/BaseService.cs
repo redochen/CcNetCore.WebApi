@@ -103,7 +103,7 @@ namespace CcNetCore.Application.Services {
             var (items, ex) = _Repo.Query (query.PageSize, query.PageIndex, query.Condition);
 
             var result = ex.ToResult<PageQueryResult<TModel>> ();
-            result.Items = items?.Select (x => _Mapper.Map<TModel> (x))?.ToList ();
+            result.Items = items?.Select (x => GetModel (x))?.ToList ();
 
             return result;
         }
@@ -139,5 +139,13 @@ namespace CcNetCore.Application.Services {
         /// <param name="model"></param>
         /// <returns></returns>
         protected TDto GetDto (object model) => _Mapper.Map<TDto> (model);
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <typeparam name="TModel"></typeparam>
+        /// <returns></returns>
+        protected TModel GetModel (TDto dto) => _Mapper.Map<TModel> (dto);
     }
 }

@@ -1,10 +1,10 @@
 using System.Reflection;
 using AutoMapper;
-using Microsoft.Extensions.DependencyInjection;
 using CcNetCore.Utils.Extensions;
 using CcNetCore.Utils.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace CcNetCore.WebApi {
+namespace CcNetCore.WebApi.Extensions {
     /// <summary>
     /// 自动映射设置
     /// </summary>

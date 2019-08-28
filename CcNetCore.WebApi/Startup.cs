@@ -4,23 +4,32 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using Autofac;
 using CcNetCore.Utils;
 using CcNetCore.Utils.Extensions;
 using CcNetCore.Utils.Helpers;
 using CcNetCore.WebApi.Controllers;
+using CcNetCore.WebApi.Extensions;
+using CcNetCore.WebApi.Filters;
 using CcNetCore.WebApi.Utils;
 using log4net;
 using log4net.Config;
 using log4net.Repository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyModel;
+using Microsoft.Extensions.WebEncoders;
+using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace CcNetCore.WebApi {
@@ -61,13 +70,32 @@ namespace CcNetCore.WebApi {
             //替换系统默认Controller创建器，必须放到AddMvc之前
             services.Replace (ServiceDescriptor.Transient<IControllerActivator, ServiceBasedControllerActivator> ());
 
+            services.AddCors (o =>
+                o.AddPolicy ("*", builder => builder.AllowAnyHeader ()
+                    .AllowAnyMethod ().AllowAnyOrigin ().AllowCredentials ()
+                ));
+
+            services.AddMemoryCache ();
+            services.AddHttpContextAccessor ();
+            services.AddSingleton<IActionContextAccessor, ActionContextAccessor> ();
+            services.AddJwtBearerAuthentication (AppSettings);
+            services.Configure<RouteOptions> (options => options.LowercaseUrls = true);
+
+            /*
             services.AddSession (options => {
                 options.IdleTimeout = TimeSpan.FromMinutes (AppSettings.TokenExpireMinutes);
             });
+            */
+
+            services.Configure<WebEncoderOptions> (options =>
+                options.TextEncoderSettings = new TextEncoderSettings (UnicodeRanges.BasicLatin, UnicodeRanges.CjkUnifiedIdeographs)
+            );
 
             services.AddMvc (options => {
                 options.Filters.Add (typeof (AuthFilter));
                 options.Filters.Add (typeof (LogFilter));
+            }).AddJsonOptions (options => {
+                options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver ();
             }).SetCompatibilityVersion (CompatibilityVersion.Version_2_2);
 
             //使用自动映射
@@ -94,13 +122,26 @@ namespace CcNetCore.WebApi {
                 app.UseHsts ();
             }
 
-            app.UseSession ();
-            app.UseHttpsRedirection ();
+            app.UseStaticFiles ();
+            app.UseFileServer ();
+            //app.UseSession ();
             app.UseAuthentication ();
+            app.UseCors ("*");
+            //app.UseHttpsRedirection (); 将所有http请求重定向至https
+
+            app.UseCustomExceptionMiddleware ();
+
+            var httpContextAccessor = app.ApplicationServices.GetRequiredService<IHttpContextAccessor> ();
+            AuthContextService.Configure (httpContextAccessor);
+
             app.UseMvc ();
 
             //启用中间件服务生成Swagger作为JSON终结点
-            app.UseSwagger ();
+            app.UseSwagger (options => {
+                options.PreSerializeFilters.Add ((document, request) => {
+                    document.Paths = document.Paths.ToDictionary (p => p.Key.ToLowerInvariant (), p => p.Value);
+                });
+            });
 
             //启用中间件服务对swagger-ui，指定Swagger JSON终结点
             app.UseSwaggerUI (options => {

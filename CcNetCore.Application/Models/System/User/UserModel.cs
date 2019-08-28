@@ -6,6 +6,12 @@ namespace CcNetCore.Application.Models {
     /// </summary>
     public class UserModel : BaseModel {
         /// <summary>
+        /// 用户ID
+        /// </summary>
+        /// <value></value>
+        public int UserID { get; set; }
+
+        /// <summary>
         /// 登录名
         /// </summary>
         public string UserName { get; set; }
@@ -29,5 +35,11 @@ namespace CcNetCore.Application.Models {
         /// 用户描述
         /// </summary>
         public string Description { get; set; }
+
+        /// <summary>
+        /// 是否已锁定
+        /// </summary>
+        /// <value></value>
+        public bool? IsLocked { get; set; }
     }
 }

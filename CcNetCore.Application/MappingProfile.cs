@@ -13,15 +13,19 @@ namespace CcNetCore.Application {
         /// </summary>
         public MappingProfile () {
             #region User
-            CreateMap<UserModel, UserDto> ();
-            CreateMap<UserDto, UserModel> ();
+            CreateMap<UserModel, UserDto> ()
+                .ForMember (d => d.Id, opt =>
+                    opt.MapFrom (s => s.UserID));
+            CreateMap<UserDto, UserModel> ()
+                .ForMember (d => d.UserID, opt =>
+                    opt.MapFrom (s => s.Id));
 
             CreateMap<CreateUserModel, UserDto> ();
             CreateMap<UpdateUserModel, UserDto> ();
             CreateMap<VerifyUserModel, UserDto> ();
             CreateMap<ChangePwdModel, UserDto> ()
-                .ForMember (d => d.PasswordHash, opt => opt
-                    .MapFrom (s => s.OldPasswordHash));
+                .ForMember (d => d.PasswordHash, opt =>
+                    opt.MapFrom (s => s.OldPasswordHash));
             #endregion
 
             #region Menu

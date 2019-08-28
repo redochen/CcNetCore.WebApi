@@ -26,11 +26,10 @@ namespace CcNetCore.Application.Services {
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public VerifyUserResult Verify (VerifyUserModel model) {
-            var result = _Repo.VerifyUser (GetDto (model), out int userID)
-                .ToResult<VerifyUserResult> ();
-
-            result.UserID = userID;
+        public Result<UserModel> Verify (VerifyUserModel model) {
+            var (user, ex) = _Repo.VerifyUser (GetDto (model));
+            var result = ex.ToResult<Result<UserModel>> ();
+            result.Data = GetModel (user);
             return result;
         }
 

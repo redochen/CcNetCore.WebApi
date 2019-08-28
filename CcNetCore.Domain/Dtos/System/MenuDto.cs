@@ -34,6 +34,11 @@ namespace CcNetCore.Domain.Dtos {
         public string Description { get; set; }
 
         /// <summary>
+        /// 菜单层级深度
+        /// </summary>
+        public int? Level { get; set; }
+
+        /// <summary>
         /// 前端组件(.vue)
         /// </summary>
         public string Component { get; set; }

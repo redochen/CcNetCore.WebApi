@@ -1,11 +1,11 @@
 using System;
 using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
 using CcNetCore.Application;
 using CcNetCore.Application.Interfaces;
 using CcNetCore.Application.Models;
 using CcNetCore.Common;
-using CcNetCore.Utils.Extensions;
+using CcNetCore.WebApi.Utils;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CcNetCore.WebApi.Controllers {
     /// <summary>
@@ -55,13 +55,11 @@ namespace CcNetCore.WebApi.Controllers {
         /// <returns></returns>
         protected TResult HandleRequest<TResult> (Func<int /*userID*/ , TResult> handle)
         where TResult : IResult, new () {
-            var success = RouteData.Values.TryGetValue (
-                Constants.ROUTE_DATA_KEY_USER_ID, out object value);
-            if (!success || null == value) {
+            var userID = AuthContextService.CurrentUser?.UserID ?? 0;
+            if (userID <= 0) {
                 return ErrorCode.UnAuthorised.ToResult<TResult> ();
             }
-
-            return handle (value.ToInt ());
+            return handle (userID);
         }
 
         /// <summary>

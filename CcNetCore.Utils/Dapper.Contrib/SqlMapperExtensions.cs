@@ -2,9 +2,9 @@
 #define NETSTANDARD2_0
 
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
@@ -78,9 +78,10 @@ namespace Dapper.Contrib.Extensions {
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> TypeProperties = new ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> ();
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> IgnoredProperties = new ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> ();
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> RequiredPorperties = new ConcurrentDictionary<RuntimeTypeHandle, IEnumerable<PropertyInfo>> ();
+        private static readonly ConcurrentDictionary < RuntimeTypeHandle, IEnumerable < (PropertyInfo Property, TypeConverterAttribute Attribute) >> ConverterProperties = new ConcurrentDictionary < RuntimeTypeHandle, IEnumerable < (PropertyInfo Property, TypeConverterAttribute Attribute) >> ();
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, string> GetQueries = new ConcurrentDictionary<RuntimeTypeHandle, string> ();
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, string> TypeTableName = new ConcurrentDictionary<RuntimeTypeHandle, string> ();
-
+        private static readonly ConcurrentDictionary<TypeConverterAttribute, TypeConverter> TypeConverters = new ConcurrentDictionary<TypeConverterAttribute, TypeConverter> ();
         private static readonly ISqlAdapter DefaultAdapter = new SqlServerAdapter ();
         private static readonly Dictionary<string, ISqlAdapter> AdapterDictionary = new Dictionary<string, ISqlAdapter> {
             ["sqlconnection"] = new SqlServerAdapter (),
@@ -168,6 +169,19 @@ namespace Dapper.Contrib.Extensions {
             return keyProperties;
         }
 
+        private static List < (PropertyInfo Property, TypeConverterAttribute Attribute) > ConverterPropertiesCache (Type type) {
+            if (ConverterProperties.TryGetValue (type.TypeHandle, out IEnumerable < (PropertyInfo Property, TypeConverterAttribute Attribute) > pis)) {
+                return pis.ToList ();
+            }
+
+            var propertyConverters = GetAttributeProperties<TypeConverterAttribute> (type)?.Select < PropertyInfo,
+                (PropertyInfo, TypeConverterAttribute) > (
+                    p => (p, p.GetAttribute<TypeConverterAttribute> (inherit: true)));
+            ConverterProperties[type.TypeHandle] = propertyConverters;
+
+            return propertyConverters.ToList ();
+        }
+
         private static List<PropertyInfo> GetAttributeProperties<TAttribute> (Type type)
         where TAttribute : Attribute {
             var typeAttr = typeof (TAttribute);
@@ -182,6 +196,22 @@ namespace Dapper.Contrib.Extensions {
             var properties = type.GetProperties ().Where (IsWriteable).ToArray ();
             TypeProperties[type.TypeHandle] = properties;
             return properties.ToList ();
+        }
+
+        private static TypeConverter GetTypeConverter (TypeConverterAttribute attribute) {
+            if (null == attribute) {
+                return null;
+            }
+
+            if (TypeConverters.TryGetValue (attribute, out TypeConverter converter)) {
+                return converter;
+            }
+
+            converter = (TypeConverter) Activator.CreateInstance (
+                Type.GetType (attribute.ConverterTypeName));
+
+            TypeConverters[attribute] = converter;
+            return converter;
         }
 
         private static bool IsWriteable (PropertyInfo pi) {
@@ -791,6 +821,7 @@ namespace Dapper.Contrib.Extensions {
                 obj = type.IsInterface ? ProxyGenerator.GetInterfaceProxy<T> () : new T ();
 
                 var allProperties = TypePropertiesCache (type);
+                var converterProperties = ConverterPropertiesCache (type);
 
                 foreach (var property in allProperties) {
                     var columnName = property.GetColumnName ();
@@ -800,9 +831,15 @@ namespace Dapper.Contrib.Extensions {
                         continue;
                     }
 
+                    TypeConverter converter = null;
+                    var converterAttr = converterProperties.FirstOrDefault (ca => ca.Property == property);
+                    if (converterAttr.Attribute != null) {
+                        converter = GetTypeConverter (converterAttr.Attribute);
+                    }
+
                     var memberType = property.GetMemberType (retriveUnderlyingType: true);
                     if (memberType != null) {
-                        val = val.ChangeType (memberType, out string error);
+                        val = val.ChangeType (memberType, out string error, converter);
                         property.SetValue (obj, val, null);
                     } else {
                         obj.SetMemberValue (property, val);

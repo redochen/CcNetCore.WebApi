@@ -1,12 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
 using CcNetCore.Application.Models;
 using CcNetCore.Common;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CcNetCore.WebApi.Controllers {
     /// <summary>
     /// 角色管理接口
     /// </summary>
-    [Route ("api/v1/role")]
+    [Route ("api/rbac/role")]
     [ApiController]
     public class RoleController : BaseController<RoleModel>, IApiController {
         /// <summary>
@@ -48,7 +48,7 @@ namespace CcNetCore.WebApi.Controllers {
         /// <param name="isSuperAdmin"></param>
         /// <param name="isBuiltin"></param>
         /// <returns></returns>
-        [Route ("getRoles")]
+        [Route ("get")]
         [HttpGet]
         public PageQueryResult<RoleModel> GetRoles (int pageSize = 0, int pageNo = 1,
             string uid = "", Status? status = null, string code = "", string name = "",

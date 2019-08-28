@@ -34,5 +34,11 @@ namespace CcNetCore.Domain.Dtos {
         /// 用户描述
         /// </summary>
         public string Description { get; set; }
+
+        /// <summary>
+        /// 是否已锁定
+        /// </summary>
+        /// <value></value>
+        public bool? IsLocked { get; set; }
     }
 }

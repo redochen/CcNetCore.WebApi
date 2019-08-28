@@ -1,17 +1,17 @@
-using Microsoft.AspNetCore.Mvc;
 using CcNetCore.Application.Interfaces;
 using CcNetCore.Application.Models;
 using CcNetCore.Common;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CcNetCore.WebApi.Controllers {
     /// <summary>
-    /// 角色权限管理接口
+    /// 用户角色管理接口
     /// </summary>
-    [Route ("api/v1/rolePerm")]
+    [Route ("api/rbac/user_role")]
     [ApiController]
-    public class RolePermController : BaseController<RolePermModel>, IApiController {
+    public class UserRoleController : BaseController<UserRoleModel>, IApiController {
         //自动装载属性（必须为public，否则自动装载失败）
-        public new IRolePermService _Service { get; set; }
+        public new IUserRoleService _Service { get; set; }
 
         /// <summary>
         /// 创建
@@ -20,7 +20,7 @@ namespace CcNetCore.WebApi.Controllers {
         /// <returns></returns>
         [Route ("add")]
         [HttpPost]
-        public BaseResult Create ([FromBody] CreateRolePermModel model) => base.Create (model);
+        public BaseResult Create ([FromBody] CreateUserRoleModel model) => base.Create (model);
 
         /// <summary>
         /// 删除
@@ -29,7 +29,7 @@ namespace CcNetCore.WebApi.Controllers {
         /// <returns></returns>
         [Route ("delete")]
         [HttpPost]
-        public BaseResult Remove ([FromBody] DeleteRolePermModel model) => base.Delete (model);
+        public BaseResult Remove ([FromBody] DeleteUserRoleModel model) => base.Delete (model);
 
         /// <summary>
         /// 批量保存
@@ -38,28 +38,28 @@ namespace CcNetCore.WebApi.Controllers {
         /// <returns></returns>
         [Route ("save")]
         [HttpPost]
-        public BaseResult Save ([FromBody] SaveRolePermModel model) =>
+        public BaseResult Save ([FromBody] SaveUserRoleModel model) =>
             HandleRequest<BaseResult> ((userID) => _Service.Save (userID, model));
 
         /// <summary>
-        /// 查询角色权限列表
+        /// 查询用户角色列表
         /// </summary>
         /// <param name="pageSize">每页项数</param>
         /// <param name="pageNo">页码，从1开始</param>
         /// <param name="uid">惟一标识</param>
         /// <param name="status">状态</param>
+        /// <param name="userUid"></param>
         /// <param name="roleCode"></param>
-        /// <param name="permCode"></param>
         /// <returns></returns>
-        [Route ("getRolePerms")]
+        [Route ("get")]
         [HttpGet]
-        public PageQueryResult<RolePermModel> GetRolePermissions (int pageSize = 0, int pageNo = 1,
-            string uid = "", Status? status = null, string roleCode = "", string permCode = "") {
-            var cond = new RolePermModel {
+        public PageQueryResult<UserRoleModel> GetUserRoles (int pageSize = 0, int pageNo = 1,
+            string uid = "", Status? status = null, string userUid = "", string roleCode = "") {
+            var cond = new UserRoleModel {
             Uid = uid,
             Status = status,
+            UserGuid = userUid,
             RoleCode = roleCode,
-            PermCode = permCode,
             };
 
             return base.GetPagedList (cond, pageSize, pageNo);

@@ -1,10 +1,10 @@
 using System.Diagnostics;
-using log4net;
-using Microsoft.AspNetCore.Mvc.Filters;
 using CcNetCore.Common;
 using CcNetCore.Utils.Extensions;
+using log4net;
+using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace CcNetCore.WebApi.Utils {
+namespace CcNetCore.WebApi.Filters {
     /// <summary>
     /// 日志过滤器
     /// </summary>

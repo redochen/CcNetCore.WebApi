@@ -17,6 +17,6 @@ namespace CcNetCore.Application.Interfaces {
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        VerifyUserResult Verify (VerifyUserModel model);
+        Result<UserModel> Verify (VerifyUserModel model);
     }
 }

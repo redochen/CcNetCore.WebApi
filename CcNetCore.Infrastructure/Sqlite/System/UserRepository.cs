@@ -18,14 +18,11 @@ namespace CcNetCore.Infrastructure.Sqlite {
         /// 验证用户
         /// </summary>
         /// <param name="userDto"></param>
-        /// <param name="userID">用户ID</param>
         /// <returns></returns>
-        public Exception VerifyUser (UserDto userDto, out int userID) {
-            userID = 0;
-
+        public (UserDto, Exception) VerifyUser (UserDto userDto) {
             var user = GetEntity (userDto);
             if (null == user || !user.UserName.IsValid () || !user.PasswordHash.IsValid ()) {
-                return Exceptions.InvalidParam;
+                return (null, Exceptions.InvalidParam);
             }
 
             var matchFields = new string[] {
@@ -36,18 +33,11 @@ namespace CcNetCore.Infrastructure.Sqlite {
             user.IsDeleted = 0;
 
             var (items, ex) = _Dapper.Query (1, 0, user, MatchSql.AND, matchFields);
-            if (ex != null) {
-                return ex;
+            if (items.IsEmpty ()) {
+                return (null, ex ?? Exceptions.NotFound);
             }
 
-            var item = items?.FirstOrDefault (u => (u.IsDeleted ?? 0) == 0);
-            if (null == item) {
-                return Exceptions.NotFound;
-            }
-
-            userID = item.Id;
-
-            return null;
+            return (GetDto (items.First ()), null);
         }
 
         /// <summary>
@@ -142,6 +132,8 @@ namespace CcNetCore.Infrastructure.Sqlite {
             exists.NickName = user.NickName.GetValue (exists.NickName);
             exists.Avatar = user.Avatar.GetValue (exists.Avatar);
             exists.Description = user.Description.GetValue (exists.Description);
+            exists.UserType = user.UserType ?? exists.UserType;
+            exists.IsLocked = user.IsLocked ?? exists.IsLocked;
         }
     }
 }

@@ -1,12 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
 using CcNetCore.Application.Models;
 using CcNetCore.Common;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CcNetCore.WebApi.Controllers {
     /// <summary>
     /// 权限管理接口
     /// </summary>
-    [Route ("api/v1/perm")]
+    [Route ("api/rbac/perm")]
     [ApiController]
     public class PermController : BaseController<PermModel>, IApiController {
         /// <summary>
@@ -49,7 +49,7 @@ namespace CcNetCore.WebApi.Controllers {
         /// <param name="menuGuid"></param>
         /// <param name="actionCode"></param>
         /// <returns></returns>
-        [Route ("getPerms")]
+        [Route ("get")]
         [HttpGet]
         public PageQueryResult<PermModel> GetPermissions (int pageSize = 0, int pageNo = 1,
             string uid = "", Status? status = null, string permCode = "", string permName = "",

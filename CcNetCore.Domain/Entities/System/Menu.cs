@@ -1,5 +1,7 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using CcNetCore.Utils.Attributes;
+using CcNetCore.Utils.Converters;
 
 using Schema = System.ComponentModel.DataAnnotations.Schema;
 
@@ -72,18 +74,21 @@ namespace CcNetCore.Domain.Entities {
         /// <summary>
         /// 是否为默认路由
         /// </summary>
+        [TypeConverter (typeof (NullableBoolTypeConverter))]
         [Column ("is_default")]
         public bool? IsDefault { get; set; }
 
         /// <summary>
         /// 在菜单中隐藏
         /// </summary>
+        [TypeConverter (typeof (NullableBoolTypeConverter))]
         [Column ("hide_in_menu")]
         public bool? HideInMenu { get; set; }
 
         /// <summary>
         /// 不缓存页面
         /// </summary>
+        [TypeConverter (typeof (NullableBoolTypeConverter))]
         [Column ("no_cache")]
         public bool? NotCache { get; set; }
     }

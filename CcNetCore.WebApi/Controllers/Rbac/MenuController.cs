@@ -1,12 +1,12 @@
-using Microsoft.AspNetCore.Mvc;
 using CcNetCore.Application.Models;
 using CcNetCore.Common;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CcNetCore.WebApi.Controllers {
     /// <summary>
     /// 菜单管理接口
     /// </summary>
-    [Route ("api/v1/menu")]
+    [Route ("api/rbac/menu")]
     [ApiController]
     public class MenuController : BaseController<MenuModel>, IApiController {
         /// <summary>
@@ -48,7 +48,7 @@ namespace CcNetCore.WebApi.Controllers {
         /// <param name="alias"></param>
         /// <param name="ParentUid"></param>
         /// <returns></returns>
-        [Route ("getMenus")]
+        [Route ("get")]
         [HttpGet]
         public PageQueryResult<MenuModel> GetMenus (int pageSize = 0, int pageNo = 1,
             string uid = "", Status? status = null, string name = "", string url = "",

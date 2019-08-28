@@ -7,6 +7,12 @@ namespace CcNetCore.Domain.Dtos {
     /// </summary>
     public class BaseDto {
         /// <summary>
+        /// 自增长标识
+        /// </summary>
+        /// <value></value>
+        public int Id { get; set; }
+
+        /// <summary>
         /// 惟一标识
         /// </summary>
         public string Uid { get; set; }

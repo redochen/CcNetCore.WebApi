@@ -10,6 +10,7 @@ namespace CcNetCore.Utils {
         public static readonly NotFoundException NotFound = new NotFoundException ();
         public static readonly AlreadyExistsException AlreadyExists = new AlreadyExistsException ();
         public static readonly IdentityException Indentify = new IdentityException ();
+        public static readonly UnauthorizedException Unauthorized = new UnauthorizedException ();
     }
 
     /// <summary>
@@ -45,5 +46,12 @@ namespace CcNetCore.Utils {
     /// </summary>
     public class IdentityException : Exception {
         public IdentityException () : base ("密码错误") { }
+    }
+
+    /// <summary>
+    /// 操作未授权
+    /// </summary>
+    public class UnauthorizedException : Exception {
+        public UnauthorizedException () : base ("操作未授权") { }
     }
 }
