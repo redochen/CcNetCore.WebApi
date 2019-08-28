@@ -5,7 +5,7 @@ namespace CcNetCore.Application.Models {
     /// <summary>
     /// 删除角色权限模型
     /// </summary>
-    public class DeleteRolePermModel : IDeleteModel {
+    public class DeleteRolePermModel : IBatchDeleteModel {
         /// <summary>
         /// 惟一标识集合
         /// </summary>

@@ -49,6 +49,14 @@ namespace CcNetCore.WebApi.Controllers {
             HandleRequest<BaseResult> ((userID) => _Service.Delete (userID, model));
 
         /// <summary>
+        /// 批量删除
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        protected BaseResult Delete (IBatchDeleteModel model) =>
+            HandleRequest<BaseResult> ((userID) => _Service.BatchDelete (userID, model));
+
+        /// <summary>
         /// 处理用户请求
         /// </summary>
         /// <param name="handle"></param>

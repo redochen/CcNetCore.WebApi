@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using CcNetCore.Utils.Attributes;
 using CcNetCore.Utils.Converters;
+using Dapper.Contrib.Extensions;
 
 using Schema = System.ComponentModel.DataAnnotations.Schema;
 
@@ -9,7 +9,7 @@ namespace CcNetCore.Domain.Entities {
     /// <summary>
     /// 角色表
     /// </summary>
-    [Schema.Table ("roles")]
+    [Schema.Table ("sys_roles")]
     public class Role : BaseEntity {
         /// <summary>
         /// 角色编码

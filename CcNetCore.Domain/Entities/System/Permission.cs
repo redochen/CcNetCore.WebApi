@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using CcNetCore.Common;
-using CcNetCore.Utils.Attributes;
+using Dapper.Contrib.Extensions;
 
 using Schema = System.ComponentModel.DataAnnotations.Schema;
 
@@ -8,7 +8,7 @@ namespace CcNetCore.Domain.Entities {
     /// <summary>
     /// 权限表
     /// </summary>
-    [Schema.Table ("permission")]
+    [Schema.Table ("sys_perms")]
     public class Permission : BaseEntity {
         /// <summary>
         /// 权限编码

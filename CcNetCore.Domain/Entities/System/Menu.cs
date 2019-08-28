@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using CcNetCore.Utils.Attributes;
 using CcNetCore.Utils.Converters;
+using Dapper.Contrib.Extensions;
 
 using Schema = System.ComponentModel.DataAnnotations.Schema;
 
@@ -9,7 +9,7 @@ namespace CcNetCore.Domain.Entities {
     /// <summary>
     /// 菜单表
     /// </summary>
-    [Schema.Table ("menus")]
+    [Schema.Table ("sys_menus")]
     public class Menu : BaseEntity {
         /// <summary>
         /// 菜单名称

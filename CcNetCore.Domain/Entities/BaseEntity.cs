@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using CcNetCore.Common;
-using CcNetCore.Utils.Attributes;
+using Dapper.Contrib.Extensions;
 
 namespace CcNetCore.Domain.Entities {
     /// <summary>

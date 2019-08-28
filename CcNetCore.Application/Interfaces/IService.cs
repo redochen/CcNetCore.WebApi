@@ -31,6 +31,14 @@ namespace CcNetCore.Application.Interfaces {
         BaseResult Delete (int userID, IDeleteModel model);
 
         /// <summary>
+        /// 批量删除
+        /// </summary>
+        /// <param name="userID">用户ID</param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        BaseResult BatchDelete (int userID, IBatchDeleteModel model);
+
+        /// <summary>
         /// 查询列表
         /// </summary>
         /// <param name="model"></param>

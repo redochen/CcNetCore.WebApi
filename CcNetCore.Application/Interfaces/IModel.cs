@@ -13,4 +13,15 @@ namespace CcNetCore.Application.Interfaces {
     /// 删除操作模型接口
     /// </summary>
     public interface IDeleteModel { }
+
+    /// <summary>
+    /// 批量删除操作模型接口
+    /// </summary>
+    public interface IBatchDeleteModel {
+        /// <summary>
+        /// 惟一标识集合
+        /// </summary>
+        /// <value></value>
+        string[] Uid { get; }
+    }
 }

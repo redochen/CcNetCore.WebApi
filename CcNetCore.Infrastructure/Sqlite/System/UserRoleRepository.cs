@@ -19,15 +19,10 @@ namespace CcNetCore.Infrastructure.Sqlite.System {
         /// </summary>
         /// <param name="conn"></param>
         /// <param name="userRole">要保存的数据项</param>
-        /// <param name="isCreation">是否为创建，否则为更新</param>
-        /// <param name="exists">已存在的数据项</param>
         /// <returns></returns>
-        protected override Exception QueryExists (IDbConnection conn, UserRole userRole, bool isCreation, out UserRole exists) {
-            exists = null;
-
-            if (null == userRole || !userRole.Uid.IsValid () ||
-                !userRole.UserGuid.IsValid () || !userRole.RoleCode.IsValid ()) {
-                return Exceptions.InvalidParam;
+        protected override (UserRole, Exception) QueryExists (IDbConnection conn, UserRole userRole) {
+            if (!userRole.UserGuid.IsValid () || !userRole.RoleCode.IsValid ()) {
+                return (null, Exceptions.InvalidParam);
             }
 
             var matchFields = new string[] {
@@ -35,9 +30,8 @@ namespace CcNetCore.Infrastructure.Sqlite.System {
             };
 
             var matchSql = $"{{0}} {MatchSql.OR} ({{1}} {MatchSql.AND} {{2}})";
-            exists = conn.GetWhere (userRole, matchSql, matchFields)?.FirstOrDefault ();
-
-            return null;
+            var exists = conn.GetWhere (userRole, matchSql, matchFields)?.FirstOrDefault ();
+            return (exists, null);
         }
 
         /// <summary>

@@ -19,35 +19,18 @@ namespace CcNetCore.Infrastructure.Sqlite {
         /// </summary>
         /// <param name="conn"></param>
         /// <param name="menu">要保存的数据项</param>
-        /// <param name="isCreation">是否为创建，否则为更新</param>
-        /// <param name="exists">已存在的数据项</param>
         /// <returns></returns>
-        protected override Exception QueryExists (IDbConnection conn, Menu menu, bool isCreation, out Menu exists) {
-            exists = null;
-
-            if (null == menu || !menu.Uid.IsValid ()) {
-                return Exceptions.InvalidParam;
+        protected override (Menu, Exception) QueryExists (IDbConnection conn, Menu menu) {
+            if (!menu.Name.IsValid () || !menu.Url.IsValid ()) {
+                return (null, Exceptions.InvalidParam);
             }
 
-            string[] matchFields = null;
+            var matchFields = new string[] {
+                nameof (menu.Uid), nameof (menu.Name), nameof (menu.Url)
+            };
 
-            if (isCreation) {
-                if (!menu.Name.IsValid () || !menu.Url.IsValid ()) {
-                    return Exceptions.InvalidParam;
-                }
-
-                matchFields = new string[] {
-                    nameof (menu.Uid), nameof (menu.Name), nameof (menu.Url)
-                };
-            } else {
-                matchFields = new string[] {
-                    nameof (menu.Uid), nameof (menu.IsDeleted)
-                };
-            }
-
-            exists = conn.GetWhere (menu, MatchSql.OR, matchFields)?.FirstOrDefault ();
-
-            return null;
+            var exists = conn.GetWhere (menu, MatchSql.OR, matchFields)?.FirstOrDefault ();
+            return (exists, null);
         }
 
         /// <summary>

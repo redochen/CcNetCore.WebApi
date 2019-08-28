@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dapper.Contrib.Extensions;
 using CcNetCore.Domain.Repositories;
-using CcNetCore.Utils;
 using CcNetCore.Utils.Helpers;
 
 namespace CcNetCore.Domain {
@@ -59,10 +58,10 @@ namespace CcNetCore.Domain {
         /// 根据已有项查询所有匹配的项列表
         /// </summary>
         /// <param name="query">查询实体</param>
-        /// <param name="matchSql">WHERE语句或AND或OR</param>
+        /// <param name="matchFields">匹配的字段列表</param>
         /// <returns></returns>
-        public (IEnumerable<T>, Exception) Query (T query) =>
-            _Dapper.Query (query, MatchSql.AND);
+        public (IEnumerable<T>, Exception) Query (T query, params string[] matchFields) =>
+            _Dapper.Query (query, MatchSql.AND, matchFields);
 
         /// <summary>
         /// 根据已有项查询所有匹配的项列表
@@ -70,10 +69,10 @@ namespace CcNetCore.Domain {
         /// <param name="pageSize">每页显示数</param>
         /// <param name="pageIndex">页码，从0开始</param>
         /// <param name="query">查询实体</param>
-        /// <param name="matchSql">WHERE语句或AND或OR</param>
+        /// <param name="matchFields">匹配的字段列表</param>
         /// <returns></returns>
-        public (IEnumerable<T>, Exception) Query (int pageSize, int pageIndex, T query) =>
-            _Dapper.Query (pageSize, pageIndex, query, MatchSql.AND);
+        public (IEnumerable<T>, Exception) Query (int pageSize, int pageIndex, T query, params string[] matchFields) =>
+            _Dapper.Query (pageSize, pageIndex, query, MatchSql.AND, matchFields);
 
         /// <summary>
         /// 批量添加项
@@ -90,25 +89,51 @@ namespace CcNetCore.Domain {
         public Exception Update (T item) => _Dapper.Update (item, UpdateItem);
 
         /// <summary>
+        /// 批量更新所有匹配的项列表
+        /// </summary>
+        /// <param name="inField">IN匹配的字段名</param>
+        /// <param name="inValues">IN匹配的值列表</param>
+        /// <param name="item">要更新的值对象</param>
+        /// <param name="updateFields">更新的字段列表</param>
+        /// <returns></returns>
+        public Exception UpdateIn (string inField, IEnumerable<object> inValues, T item, params string[] updateFields) {
+            var (matchSql, parameters) = GetInMatch (inField, inValues);
+            return _Dapper.Update (matchSql, parameters, item, updateFields);
+        }
+
+        /// <summary>
         /// 根据已有项删除所有匹配的项列表
         /// </summary>
         /// <param name="item"></param>
+        /// <param name="matchFields">匹配的字段列表</param>
         /// <returns></returns>
-        public Exception Delete (T item) => _Dapper.Delete (item, MatchSql.AND);
+        public Exception Delete (T item, params string[] matchFields) =>
+            _Dapper.Delete (item, MatchSql.AND, matchFields);
 
         /// <summary>
-        /// 删除所有匹配的项列表
+        /// 批量删除所有匹配的项列表
         /// </summary>
-        /// <param name="inField">批量删除时IN匹配的字段名</param>
-        /// <param name="inValues"></param>
+        /// <param name="inField">IN匹配的字段名</param>
+        /// <param name="inValues">IN匹配的值列表</param>
         /// <returns></returns>
-        public Exception Delete (string inField, IEnumerable<object> inValues) {
-            var matclSql = "{0} in {1}";
+        public Exception DeleteIn (string inField, IEnumerable<object> inValues) {
+            var (matchSql, parameters) = GetInMatch (inField, inValues);
+            return _Dapper.Delete (matchSql, parameters);
+        }
+
+        /// <summary>
+        /// 获取IN匹配SQL
+        /// </summary>
+        /// <param name="inField">IN匹配的字段名</param>
+        /// <param name="inValues">IN匹配的值列表</param>
+        /// <returns></returns>
+        private (string, Dictionary<string, object>) GetInMatch (string inField, IEnumerable<object> inValues) {
+            var matchSql = "{0} in {1}";
             var parameters = new Dictionary<string, object> {
                     [inField] = inValues?.ToArray (),
                 };
 
-            return _Dapper.Delete (matclSql, parameters);
+            return (matchSql, parameters);
         }
 
         /// <summary>

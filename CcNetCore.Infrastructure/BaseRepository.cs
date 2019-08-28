@@ -38,9 +38,10 @@ namespace CcNetCore.Infrastructure {
         /// 根据已有项查询所有匹配的项列表
         /// </summary>
         /// <param name="query">查询实体</param>
+        /// <param name="matchFields">匹配的字段列表</param>
         /// <returns></returns>
-        public (IEnumerable<TDto>, Exception) Query (TDto query) {
-            var (items, ex) = base.Query (GetEntity (query));
+        public (IEnumerable<TDto>, Exception) Query (TDto query, params string[] matchFields) {
+            var (items, ex) = base.Query (GetEntity (query), matchFields);
             return (items?.Select (x => GetDto (x)), ex);
         }
 
@@ -50,9 +51,10 @@ namespace CcNetCore.Infrastructure {
         /// <param name="pageSize">每页显示数</param>
         /// <param name="pageIndex">页码，从0开始</param>
         /// <param name="query">查询实体</param>
+        /// <param name="matchFields">匹配的字段列表</param>
         /// <returns></returns>
-        public (IEnumerable<TDto>, Exception) Query (int pageSize, int pageIndex, TDto query) {
-            var (items, ex) = base.Query (pageSize, pageIndex, GetEntity (query));
+        public (IEnumerable<TDto>, Exception) Query (int pageSize, int pageIndex, TDto query, params string[] matchFields) {
+            var (items, ex) = base.Query (pageSize, pageIndex, GetEntity (query), matchFields);
             return (items?.Select (x => GetDto (x)), ex);
         }
 
@@ -72,11 +74,24 @@ namespace CcNetCore.Infrastructure {
         public Exception Update (TDto item) => base.Update (GetEntity (item));
 
         /// <summary>
+        /// 批量更新所有匹配的项列表
+        /// </summary>
+        /// <param name="inField">IN匹配的字段名</param>
+        /// <param name="inValues">IN匹配的值列表</param>
+        /// <param name="item">要更新的值对象</param>
+        /// <param name="updateFields">更新的字段列表</param>
+        /// <returns></returns>
+        public Exception UpdateIn (string inField, IEnumerable<object> inValues, TDto item, params string[] updateFields) =>
+            base.UpdateIn (inField, inValues, GetEntity (item), updateFields);
+
+        /// <summary>
         /// 根据已有项删除所有匹配的项列表
         /// </summary>
         /// <param name="item"></param>
+        /// <param name="matchFields">匹配的字段列表</param>
         /// <returns></returns>
-        public Exception Delete (TDto item) => base.Delete (GetEntity (item));
+        public Exception Delete (TDto item, params string[] matchFields) =>
+            base.Delete (GetEntity (item), matchFields);
 
         /// <summary>
         /// 将Dto转换成实体
@@ -110,8 +125,7 @@ namespace CcNetCore.Infrastructure {
             Exception ex = null;
 
             entities.ForEach (x => {
-                ex = QueryExists (conn, x, isCreation : true, out TEntity item);
-                exists = item;
+                (exists, ex) = QueryExists (conn, x, isCreation : true);
                 return (ex != null || exists != null);
             });
 
@@ -134,7 +148,7 @@ namespace CcNetCore.Infrastructure {
         /// <param name="entity">要更新的数据项</param>
         /// <returns></returns>
         protected override Exception UpdateItem (IDbConnection conn, IDbTransaction trans, TEntity entity) {
-            var ex = QueryExists (conn, entity, isCreation : false, out TEntity exists);
+            var (exists, ex) = QueryExists (conn, entity, isCreation : false);
             if (ex != null) {
                 return ex;
             }
@@ -160,9 +174,31 @@ namespace CcNetCore.Infrastructure {
         /// <param name="conn"></param>
         /// <param name="entity">要保存的数据项</param>
         /// <param name="isCreation">是否为创建，否则为更新</param>
-        /// <param name="exists">已存在的数据项</param>
         /// <returns></returns>
-        protected abstract Exception QueryExists (IDbConnection conn, TEntity entity, bool isCreation, out TEntity exists);
+        protected (TEntity exists, Exception ex) QueryExists (IDbConnection conn, TEntity entity, bool isCreation) {
+            if (null == entity || !entity.Uid.IsValid ()) {
+                return (null, Exceptions.InvalidParam);
+            }
+
+            if (isCreation) {
+                return QueryExists (conn, entity);
+            }
+
+            var matchFields = new string[] {
+                nameof (entity.Uid), nameof (entity.IsDeleted)
+            };
+
+            var exists = conn.GetWhere (entity, MatchSql.AND, matchFields)?.FirstOrDefault ();
+            return (exists, null);
+        }
+
+        /// <summary>
+        /// 查询已存在的数据项
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <param name="entity">要保存的数据项</param>
+        /// <returns></returns>
+        protected abstract (TEntity, Exception) QueryExists (IDbConnection conn, TEntity entity);
 
         /// <summary>
         /// 更新已存在的数据项

@@ -12,12 +12,5 @@ namespace CcNetCore.Application.Interfaces {
         /// <param name="model"></param>
         /// <returns></returns>
         BaseResult Save (int userID, SaveUserRoleModel model);
-
-        /// <summary>
-        /// 删除
-        /// </summary>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        BaseResult Delete (DeleteUserRoleModel model);
     }
 }

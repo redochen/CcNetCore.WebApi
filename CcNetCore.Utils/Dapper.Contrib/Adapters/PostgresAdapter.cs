@@ -1,0 +1,111 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+
+namespace Dapper.Contrib.Extensions {
+    /// <summary>
+    /// The Postgres database adapter.
+    /// /// </summary>
+    public partial class PostgresAdapter : ISqlAdapter {
+        /// <summary>
+        /// 是否存在表
+        /// </summary>
+        /// <param name="connection"><连接实例/param>
+        /// <param name="tableName">表名</param>
+        /// <returns></returns>
+        public bool ExistsTable (IDbConnection connection, string tableName) => true;
+
+        /// <summary>
+        /// Inserts <paramref name="entityToInsert"/> into the database, returning the Id of the row created.
+        /// </summary>
+        /// <param name="connection">The connection to use.</param>
+        /// <param name="transaction">The transaction to use.</param>
+        /// <param name="commandTimeout">The command timeout to use.</param>
+        /// <param name="tableName">The table to insert into.</param>
+        /// <param name="columnList">The columns to set with this insert.</param>
+        /// <param name="parameterList">The parameters to set for this insert.</param>
+        /// <param name="keyProperties">The key columns in this table.</param>
+        /// <param name="entityToInsert">The entity to insert.</param>
+        /// <returns>The Id of the row created.</returns>
+        public int Insert (IDbConnection connection, IDbTransaction transaction, int? commandTimeout, string tableName, string columnList, string parameterList, IEnumerable<PropertyInfo> keyProperties, object entityToInsert) {
+            var sbSql = new StringBuilder ();
+            sbSql.AppendFormat ("insert into {0} ({1}) values ({2})", tableName, columnList, parameterList);
+
+            // If no primary key then safe to assume a join table with not too much data to return
+            var propertyInfos = keyProperties as PropertyInfo[] ?? keyProperties.ToArray ();
+            if (propertyInfos.Length == 0) {
+                sbSql.Append (" RETURNING *");
+            } else {
+                sbSql.Append (" RETURNING ");
+                var first = true;
+                foreach (var property in propertyInfos) {
+                    if (!first) {
+                        sbSql.Append (", ");
+                    }
+
+                    first = false;
+                    sbSql.Append (property.Name);
+                }
+            }
+
+            var results = connection.Query (sbSql.ToString (), entityToInsert, transaction, commandTimeout : commandTimeout).ToList ();
+
+            // Return the key by assinging the corresponding property in the object - by product is that it supports compound primary keys
+            var id = 0;
+            foreach (var p in propertyInfos) {
+                var value = ((IDictionary<string, object>) results[0]) [p.Name.ToLower ()];
+                p.SetValue (entityToInsert, value, null);
+                if (id == 0) {
+                    id = Convert.ToInt32 (value);
+                }
+            }
+
+            return id;
+        }
+
+        /// <summary>
+        /// Adds the name of a column.
+        /// </summary>
+        /// <param name="sbSql">The string builder  to append to.</param>
+        /// <param name="columnName">The column name.</param>
+        public void AppendColumnName (StringBuilder sbSql, string columnName) {
+            sbSql.AppendFormat ("\"{0}\"", columnName);
+        }
+
+        /// <summary>
+        /// gets a column equality to a parameter.
+        /// </summary>
+        /// <param name="column">The column's property info object.</param>
+        public string GetColumnNameEqualsValue (PropertyInfo column) =>
+            $"\"{column.GetColumnName()}\" = @{column.Name}";
+
+        /// <summary>
+        /// 添加列定义
+        /// </summary>
+        /// <param name="sbSql"></param>
+        /// <param name="columnName">列名</param>
+        /// <param name="type">类型</param>
+        /// <param name="attribute">字段属性</param>
+        /// <param name="isExplicitKey">是否为主键</param>
+        /// <param name="isKey">是否为键</param>
+        /// <param name="isNotNull">是否非空</param>
+        /// <param name="autoIncrement">是否自动增长列</param>
+        public void AppendColumnDefination (StringBuilder sbSql, string columnName, Type type,
+            ColumnAttribute attribute, bool isExplicitKey, bool isKey, bool isNotNull, bool autoIncrement) {
+            //TODO:
+        }
+
+        /// <summary>
+        /// 获取分页查询Sql
+        /// </summary>
+        /// <param name="sbSql"></param>
+        /// <param name="pageSize">每页显示数</param>
+        /// <param name="pageIndex">页码，从0开始</param>
+        public void GetPageQuerySql (StringBuilder sbSql, int? pageSize, int? pageIndex) {
+            //TODO:
+        }
+    }
+}

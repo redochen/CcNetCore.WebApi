@@ -19,35 +19,18 @@ namespace CcNetCore.Infrastructure.Sqlite {
         /// </summary>
         /// <param name="conn"></param>
         /// <param name="perm">要保存的数据项</param>
-        /// <param name="isCreation">是否为创建，否则为更新</param>
-        /// <param name="exists">已存在的数据项</param>
         /// <returns></returns>
-        protected override Exception QueryExists (IDbConnection conn, Permission perm, bool isCreation, out Permission exists) {
-            exists = null;
-
-            if (null == perm || !perm.Uid.IsValid ()) {
-                return Exceptions.InvalidParam;
+        protected override (Permission, Exception) QueryExists (IDbConnection conn, Permission perm) {
+            if (!perm.Name.IsValid () || !perm.Code.IsValid ()) {
+                return (null, Exceptions.InvalidParam);
             }
 
-            string[] matchFields = null;
+            var matchFields = new string[] {
+                nameof (perm.Uid), nameof (perm.Name), nameof (perm.Code)
+            };
 
-            if (isCreation) {
-                if (!perm.Name.IsValid () || !perm.Code.IsValid ()) {
-                    return Exceptions.InvalidParam;
-                }
-
-                matchFields = new string[] {
-                    nameof (perm.Uid), nameof (perm.Name), nameof (perm.Code)
-                };
-            } else {
-                matchFields = new string[] {
-                    nameof (perm.Uid), nameof (perm.IsDeleted)
-                };
-            }
-
-            exists = conn.GetWhere (perm, MatchSql.OR, matchFields)?.FirstOrDefault ();
-
-            return null;
+            var exists = conn.GetWhere (perm, MatchSql.OR, matchFields)?.FirstOrDefault ();
+            return (exists, null);
         }
 
         /// <summary>

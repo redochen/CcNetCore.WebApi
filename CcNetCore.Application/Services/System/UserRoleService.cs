@@ -54,21 +54,10 @@ namespace CcNetCore.Application.Services {
                 var uids = existsItems.Where (x => delRoles.Any (y => y.Equals (x.RoleCode)))
                     .Select (x => x.Uid);
 
-                ex = BatchDelete ("Uid", uids);
-                if (ex != null) {
-                    return ex.ToResult ();
-                }
+                return DeleteByUids (uids, null);
             }
 
             return ErrorCode.Success.ToResult ();
         }
-
-        /// <summary>
-        /// 删除
-        /// </summary>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        public BaseResult Delete (DeleteUserRoleModel model) =>
-            BatchDelete ("Uid", model.Uid).ToResult ();
     }
 }

@@ -19,35 +19,18 @@ namespace CcNetCore.Infrastructure.Sqlite {
         /// </summary>
         /// <param name="conn"></param>
         /// <param name="role">要保存的数据项</param>
-        /// <param name="isCreation">是否为创建，否则为更新</param>
-        /// <param name="exists">已存在的数据项</param>
         /// <returns></returns>
-        protected override Exception QueryExists (IDbConnection conn, Role role, bool isCreation, out Role exists) {
-            exists = null;
-
-            if (null == role || !role.Uid.IsValid ()) {
-                return Exceptions.InvalidParam;
+        protected override (Role, Exception) QueryExists (IDbConnection conn, Role role) {
+            if (!role.Name.IsValid () || !role.Code.IsValid ()) {
+                return (null, Exceptions.InvalidParam);
             }
 
-            string[] matchFields = null;
+            var matchFields = new string[] {
+                nameof (role.Uid), nameof (role.Name), nameof (role.Code)
+            };
 
-            if (isCreation) {
-                if (!role.Name.IsValid () || !role.Code.IsValid ()) {
-                    return Exceptions.InvalidParam;
-                }
-
-                matchFields = new string[] {
-                    nameof (role.Uid), nameof (role.Name), nameof (role.Code)
-                };
-            } else {
-                matchFields = new string[] {
-                    nameof (role.Uid), nameof (role.IsDeleted)
-                };
-            }
-
-            exists = conn.GetWhere (role, MatchSql.OR, matchFields)?.FirstOrDefault ();
-
-            return null;
+            var exists = conn.GetWhere (role, MatchSql.OR, matchFields)?.FirstOrDefault ();
+            return (exists, null);
         }
 
         /// <summary>

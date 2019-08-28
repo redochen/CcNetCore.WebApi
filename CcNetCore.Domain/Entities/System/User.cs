@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using CcNetCore.Common;
-using CcNetCore.Utils.Attributes;
 using CcNetCore.Utils.Converters;
+using Dapper.Contrib.Extensions;
 
 using Schema = System.ComponentModel.DataAnnotations.Schema;
 
@@ -10,7 +10,7 @@ namespace CcNetCore.Domain.Entities {
     /// <summary>
     /// 用户表
     /// </summary>
-    [Schema.Table ("users")]
+    [Schema.Table ("sys_users")]
     public class User : BaseEntity {
         /// <summary>
         /// 登录名

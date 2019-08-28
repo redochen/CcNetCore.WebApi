@@ -49,6 +49,8 @@ namespace CcNetCore.Application.Services {
                 return Exceptions.InvalidParam.ToResult ();
             }
 
+            //默认为未删除
+            dto.IsDeleted = 0;
             dto.UpdateUser = userID;
             dto.UpdateTime = DateTime.Now;
 
@@ -77,13 +79,44 @@ namespace CcNetCore.Application.Services {
         }
 
         /// <summary>
-        /// 删除所有匹配的项列表
+        /// 批量删除
         /// </summary>
-        /// <param name="inField">批量删除时IN匹配的字段名</param>
-        /// <param name="inValues"></param>
+        /// <param name="userID">用户ID</param>
+        /// <param name="model"></param>
         /// <returns></returns>
-        protected Exception BatchDelete (string inField, IEnumerable<object> inValues) =>
-            _Repo.Delete (inField, inValues);
+        public BaseResult BatchDelete (int userID, IBatchDeleteModel model) {
+            if (null == model || model.Uid.IsEmpty ()) {
+                return Exceptions.InvalidParam.ToResult ();
+            }
+
+            var dto = new TDto {
+                //使用软删除
+                IsDeleted = 1,
+                UpdateUser = userID,
+                UpdateTime = DateTime.Now,
+            };
+
+            return DeleteByUids (model.Uid, dto);
+        }
+
+        /// <summary>
+        /// 根据UID批量删除
+        /// </summary>
+        /// <param name="uids"></param>
+        /// <param name="dto">DTO对象为空时物理删除，非空时软删除</param>
+        /// <returns></returns>
+        protected BaseResult DeleteByUids (IEnumerable<string> uids, TDto dto) {
+            if (null == dto) //物理删除
+            {
+                return _Repo.DeleteIn ("Uid", uids).ToResult ();
+            }
+
+            var updateFields = new string[] {
+                nameof (dto.IsDeleted), nameof (dto.UpdateUser), nameof (dto.UpdateTime)
+            };
+
+            return _Repo.UpdateIn ("Uid", uids, dto, updateFields).ToResult ();
+        }
 
         /// <summary>
         /// 查询列表

@@ -48,7 +48,7 @@ namespace CcNetCore.Utils.Helpers {
         /// </summary>
         /// <param name="entityToQuery"></param>
         /// <param name="matchSql">WHERE语句或AND或OR</param>
-        /// <param name="matchFields"></param>
+        /// <param name="matchFields">匹配的字段列表</param>
         /// <returns></returns>
         public (IEnumerable<TEntity>, Exception) Query (TEntity entityToQuery, string matchSql, params string[] matchFields) {
             return Query (conn => {
@@ -64,7 +64,7 @@ namespace CcNetCore.Utils.Helpers {
         /// <param name="pageIndex">页码，从0开始</param>
         /// <param name="entityToQuery"></param>
         /// <param name="matchSql">WHERE语句或AND或OR</param>
-        /// <param name="matchFields"></param>
+        /// <param name="matchFields">匹配的字段列表</param>
         /// <returns></returns>
         public (IEnumerable<TEntity>, Exception) Query (int pageSize, int pageIndex,
             TEntity entityToQuery, string matchSql, params string[] matchFields) {
@@ -107,26 +107,57 @@ namespace CcNetCore.Utils.Helpers {
         /// <summary>
         /// 根据已有实体删除匹配的实体列表
         /// </summary>
-        /// <param name="entityToDelete"></param>
-        /// <param name="matchFields"></param>
+        /// <param name="matchSql">匹配的SQL</param>
+        /// <param name="parameters">参数值</param>
+        /// <param name="entityToUpdate">更新的值对象</param>
+        /// <param name="updateFields">更新的字段列表</param>
         /// <returns></returns>
-        public Exception Delete (TEntity entityToDelete, string matchSql, params string[] matchFields) =>
-            Execute ((conn, trans) => {
-                var success = conn.DeleteWhere<TEntity> (trans, entityToDelete, matchSql, matchFields);
+        public Exception Update (string matchSql, Dictionary<string, object> parameters,
+            TEntity entityToUpdate, params string[] updateFields) {
+            if (null == entityToUpdate || !matchSql.IsValid ()) {
+                return Exceptions.InvalidParam;
+            }
+
+            return Execute ((conn, trans) => {
+                var success = conn.UpdateWhere<TEntity> (trans, entityToUpdate, updateFields, matchSql, parameters);
                 return success ? null : Exceptions.Failure;
             });
+        }
 
         /// <summary>
         /// 根据已有实体删除匹配的实体列表
         /// </summary>
-        /// <param name="matchSql"></param>
-        /// <param name="parameters"></param>
+        /// <param name="entityToDelete"></param>
+        /// <param name="matchSql">WHERE语句或AND或OR</param>
+        /// <param name="matchFields">匹配的字段列表</param>
         /// <returns></returns>
-        public Exception Delete (string matchSql, Dictionary<string, object> parameters) =>
-            Execute ((conn, trans) => {
+        public Exception Delete (TEntity entityToDelete, string matchSql, params string[] matchFields) {
+            if (null == entityToDelete || !matchSql.IsValid ()) {
+                return Exceptions.InvalidParam;
+            }
+
+            return Execute ((conn, trans) => {
+                var success = conn.DeleteWhere<TEntity> (trans, entityToDelete, matchSql, matchFields);
+                return success ? null : Exceptions.Failure;
+            });
+        }
+
+        /// <summary>
+        /// 根据已有实体删除匹配的实体列表
+        /// </summary>
+        /// <param name="matchSql">匹配的SQL</param>
+        /// <param name="parameters">参数值</param>
+        /// <returns></returns>
+        public Exception Delete (string matchSql, Dictionary<string, object> parameters) {
+            if (!matchSql.IsValid ()) {
+                return Exceptions.InvalidParam;
+            }
+
+            return Execute ((conn, trans) => {
                 var success = conn.DeleteWhere<TEntity> (trans, matchSql, parameters);
                 return success ? null : Exceptions.Failure;
             });
+        }
 
         /// <summary>
         /// 查询

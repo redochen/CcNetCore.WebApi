@@ -92,35 +92,18 @@ namespace CcNetCore.Infrastructure.Sqlite {
         /// </summary>
         /// <param name="conn"></param>
         /// <param name="user">要保存的数据项</param>
-        /// <param name="isCreation">是否为创建，否则为更新</param>
-        /// <param name="exists">已存在的数据项</param>
         /// <returns></returns>
-        protected override Exception QueryExists (IDbConnection conn, User user, bool isCreation, out User exists) {
-            exists = null;
-
-            if (null == user || !user.Uid.IsValid ()) {
-                return Exceptions.InvalidParam;
+        protected override (User, Exception) QueryExists (IDbConnection conn, User user) {
+            if (!user.UserName.IsValid () || !user.PasswordHash.IsValid ()) {
+                return (null, Exceptions.InvalidParam);
             }
 
-            string[] matchFields = null;
+            var matchFields = new string[] {
+                nameof (user.Uid), nameof (user.UserName)
+            };
 
-            if (isCreation) {
-                if (!user.UserName.IsValid () || !user.PasswordHash.IsValid ()) {
-                    return Exceptions.InvalidParam;
-                }
-
-                matchFields = new string[] {
-                    nameof (user.Uid), nameof (user.UserName)
-                };
-            } else {
-                matchFields = new string[] {
-                    nameof (user.Uid), nameof (user.IsDeleted)
-                };
-            }
-
-            exists = conn.GetWhere (user, MatchSql.OR, matchFields)?.FirstOrDefault ();
-
-            return null;
+            var exists = conn.GetWhere (user, MatchSql.OR, matchFields)?.FirstOrDefault ();
+            return (exists, null);
         }
 
         /// <summary>
