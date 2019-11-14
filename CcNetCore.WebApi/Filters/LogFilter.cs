@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using CcNetCore.Common;
 using CcNetCore.Utils.Extensions;
@@ -10,6 +11,8 @@ namespace CcNetCore.WebApi.Filters {
     /// </summary>
     public class LogFilter : IActionFilter {
         private ILog _Logger = null;
+        private static ConcurrentDictionary<object, Stopwatch> _Timers =
+            new ConcurrentDictionary<object, Stopwatch> ();
 
         /// <summary>
         /// 构造函数
@@ -32,8 +35,12 @@ namespace CcNetCore.WebApi.Filters {
 
             _Logger.Debug ($"[{id}]开始请求:\"{uri}\",参数:{args}");
 
+            _Timers.AddOrUpdate (id, sw, (k, v) => {
+                v = sw;
+                return v;
+            });
+
             context.RouteData.Values.Add (Constants.ROUTE_DATA_KEY_REQ_ID, id);
-            context.RouteData.Values.Add (Constants.ROUTE_DATA_KEY_TIMER, sw);
         }
 
         /// <summary>
@@ -45,10 +52,11 @@ namespace CcNetCore.WebApi.Filters {
 
             context.RouteData.Values.TryGetValue (
                 Constants.ROUTE_DATA_KEY_REQ_ID, out object id);
-            context.RouteData.Values.TryGetValue (
-                Constants.ROUTE_DATA_KEY_TIMER, out object value);
 
-            if (value is Stopwatch sw) {
+            _Timers.TryRemove (id, out Stopwatch sw);
+
+            if (sw != null) {
+                sw.Stop ();
                 _Logger.Debug ($"[{id}]结束请求:\"{uri}\",总耗时:{sw.Elapsed.TotalSeconds}秒");
             } else {
                 _Logger.Debug ($"[{id}]结束请求:\"{uri}\"");

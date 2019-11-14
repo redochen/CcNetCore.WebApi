@@ -25,5 +25,8 @@ namespace CcNetCore.Common {
 
         [Description ("令牌已过期")]
         ExpiredToken,
+
+        [Description ("无效的参数")]
+        InvalidParam,
     }
 }

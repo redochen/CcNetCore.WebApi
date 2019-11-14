@@ -1,4 +1,5 @@
 using Dapper.Contrib.Extensions;
+
 using Schema = System.ComponentModel.DataAnnotations.Schema;
 
 namespace CcNetCore.Domain.Entities {

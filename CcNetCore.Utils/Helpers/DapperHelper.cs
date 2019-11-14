@@ -4,22 +4,26 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using Dapper.Contrib.Extensions;
 using CcNetCore.Utils.Extensions;
+using Dapper;
+using Dapper.Contrib.Extensions;
 
 namespace CcNetCore.Utils.Helpers {
     /// <summary>
     /// 数据库提供方接口
     /// </summary>
     public interface IDbProvider {
+        /// <summary>
+        /// 获取数据库连接实例
+        /// </summary>
+        /// <returns></returns>
         IDbConnection GetConnection ();
     }
 
     /// <summary>
     /// Dapper帮助类
     /// </summary>
-    /// <typeparam name="TEntity"></typeparam>
-    public class DapperHelper<TEntity> where TEntity : class, new () {
+    public class DapperHelper {
         private IDbProvider _DbProvider = null;
 
         /// <summary>
@@ -35,25 +39,16 @@ namespace CcNetCore.Utils.Helpers {
         /// </summary>
         /// <param name="pageSize">每页显示数</param>
         /// <param name="pageIndex">页码，从0开始</param>
+        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public (IEnumerable<TEntity>, Exception) Query (int pageSize, int pageIndex) {
-            return Query (conn => {
-                var data = conn.GetWhere<TEntity> (pageSize, pageIndex);
-                return (data?.ToList (), null);
-            });
-        }
+        public (long Count, IEnumerable<T> Items, Exception Exception) Select<T> (
+            int pageSize, int pageIndex) where T : class, new () {
+            return Query<T> (conn => {
+                var cmd = new SelectCommand (conn)
+                    .SetPageInfo (pageSize, pageIndex);
 
-        /// <summary>
-        /// 根据已有实体查询匹配的实体列表
-        /// </summary>
-        /// <param name="entityToQuery"></param>
-        /// <param name="matchSql">WHERE语句或AND或OR</param>
-        /// <param name="matchFields">匹配的字段列表</param>
-        /// <returns></returns>
-        public (IEnumerable<TEntity>, Exception) Query (TEntity entityToQuery, string matchSql, params string[] matchFields) {
-            return Query (conn => {
-                var data = conn.GetWhere<TEntity> (entityToQuery, matchSql, matchFields);
-                return (data?.ToList (), null);
+                var (count, items) = cmd.GetWhere<T> (predicate: null);
+                return (count, items, null);
             });
         }
 
@@ -62,26 +57,119 @@ namespace CcNetCore.Utils.Helpers {
         /// </summary>
         /// <param name="pageSize">每页显示数</param>
         /// <param name="pageIndex">页码，从0开始</param>
-        /// <param name="entityToQuery"></param>
-        /// <param name="matchSql">WHERE语句或AND或OR</param>
-        /// <param name="matchFields">匹配的字段列表</param>
+        /// <param name="orderby">排序字段集合</param>
+        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public (IEnumerable<TEntity>, Exception) Query (int pageSize, int pageIndex,
-            TEntity entityToQuery, string matchSql, params string[] matchFields) {
-            return Query (conn => {
-                var data = conn.GetWhere<TEntity> (pageSize, pageIndex, entityToQuery, matchSql, matchFields);
-                return (data?.ToList (), null);
+        public (long Count, IEnumerable<T> Items, Exception Exception) Select<T> (
+            int pageSize, int pageIndex, SqlOrder[] orderby) where T : class, new () {
+            return Query<T> (conn => {
+                var cmd = new SelectCommand (conn) {
+                    SortFields = orderby
+                }.SetPageInfo (pageSize, pageIndex);
+
+                var (count, items) = cmd.GetWhere<T> (predicate: null);
+                return (count, items, null);
             });
         }
+
+        /// <summary>
+        /// 根据已有实体查询匹配的实体列表
+        /// </summary>
+        /// <param name="predicate">WHERE匹配谓词实例</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public (long Count, IEnumerable<T> Items, Exception Exception) Select<T> (
+            SqlPredicate<T> predicate) where T : class, new () {
+            return Query<T> (conn => {
+                var (count, items) = conn.GetWhere<T> (predicate);
+                return (count, items, null);
+            });
+        }
+
+        /// <summary>
+        /// 根据已有实体查询匹配的实体列表
+        /// </summary>
+        /// <param name="predicate">WHERE匹配谓词实例</param>
+        /// <param name="orderby">排序字段集合</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public (long Count, IEnumerable<T> Items, Exception Exception) Select<T> (
+            SqlPredicate<T> predicate, SqlOrder[] orderby) where T : class, new () {
+            return Query<T> (conn => {
+                var cmd = new SelectCommand (conn) {
+                SortFields = orderby
+                };
+
+                var (count, items) = cmd.GetWhere<T> (predicate);
+                return (count, items, null);
+            });
+        }
+
+        /// <summary>
+        /// 根据已有实体查询匹配的实体列表
+        /// </summary>
+        /// <param name="pageSize">每页显示数</param>
+        /// <param name="pageIndex">页码，从0开始</param>
+        /// <param name="predicate">WHERE匹配谓词实例</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public (long Count, IEnumerable<T> Items, Exception Exception) Select<T> (
+            int pageSize, int pageIndex, SqlPredicate<T> predicate)
+        where T : class, new () {
+            return Query<T> (conn => {
+                var cmd = new SelectCommand (conn)
+                    .SetPageInfo (pageSize, pageIndex);
+
+                var (count, items) = cmd.GetWhere<T> (predicate);
+                return (count, items, null);
+            });
+        }
+
+        /// <summary>
+        /// 根据已有实体查询匹配的实体列表
+        /// </summary>
+        /// <param name="pageSize">每页显示数</param>
+        /// <param name="pageIndex">页码，从0开始</param>
+        /// <param name="predicate">WHERE匹配谓词实例</param>
+        /// <param name="orderby">排序字段集合</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public (long Count, IEnumerable<T> Items, Exception Exception) Select<T> (
+            int pageSize, int pageIndex, SqlPredicate<T> predicate, SqlOrder[] orderby)
+        where T : class, new () {
+            return Query<T> (conn => {
+                var cmd = new SelectCommand (conn) {
+                    SortFields = orderby
+                }.SetPageInfo (pageSize, pageIndex);
+
+                var (count, items) = cmd.GetWhere<T> (predicate);
+                return (count, items, null);
+            });
+        }
+
+        /// <summary>
+        /// 执行查询SQL
+        /// </summary>
+        /// <param name="sql">SQL语句</param>
+        /// <param name="param">参数</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public (long Count, IEnumerable<T> Items, Exception Exception) Select<T> (
+                string sql, object param = null) where T : class, new () =>
+            Query<T> (conn => {
+                var items = conn.Get<T> (sql, param);
+                return (items?.Count () ?? 0, items, null);
+            });
 
         /// <summary>
         /// 添加实体集合
         /// </summary>
         /// <param name="entities"></param>
         /// <param name="insertFunc"></param>
+        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public Exception Add (IEnumerable<TEntity> entities,
-            Func<IDbConnection, IDbTransaction, IEnumerable<TEntity>, Exception> insertFunc) {
+        public Exception Add<T> (IEnumerable<T> entities,
+            Func<IDbConnection, IDbTransaction, IEnumerable<T>, Exception> insertFunc) {
             if (entities.IsEmpty ()) {
                 return Exceptions.InvalidParam;
             }
@@ -92,86 +180,152 @@ namespace CcNetCore.Utils.Helpers {
         /// <summary>
         /// 更新实体
         /// </summary>
-        /// <param name="entityToUpdate"></param>
+        /// <param name="condition"></param>
         /// <param name="updateFunc"></param>
+        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public Exception Update (TEntity entityToUpdate,
-            Func<IDbConnection, IDbTransaction, TEntity, Exception> updateFunc) {
-            if (null == entityToUpdate) {
+        public Exception Update<T> (T condition, Func<IDbConnection, IDbTransaction, T, Exception> updateFunc)
+        where T : class, new () {
+            if (null == condition) {
                 return Exceptions.InvalidParam;
             }
 
-            return Execute ((conn, trans) => updateFunc (conn, trans, entityToUpdate));
+            return Execute ((conn, trans) => updateFunc (conn, trans, condition));
         }
 
         /// <summary>
         /// 根据已有实体删除匹配的实体列表
         /// </summary>
-        /// <param name="matchSql">匹配的SQL</param>
-        /// <param name="parameters">参数值</param>
-        /// <param name="entityToUpdate">更新的值对象</param>
+        /// <param name="predicate">WHERE匹配谓词实例</param>
+        /// <param name="updateFields">更新的字段列表</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public Exception Update<T> (SqlPredicate<T> predicate, params string[] updateFields)
+        where T : class, new () {
+            if (null == predicate) {
+                return Exceptions.InvalidParam;
+            }
+
+            return Execute ((conn, trans) => {
+                var cmd = new UpdateCommand (conn, trans) {
+                UpdateFields = updateFields
+                };
+                return cmd.UpdateWhere<T> (predicate) ? null : Exceptions.Failure;
+            });
+        }
+
+        /// <summary>
+        /// 批量更新所有匹配的项列表
+        /// </summary>
+        /// <param name="item">要更新的值对象</param>
+        /// <param name="inField">IN匹配的字段名</param>
+        /// <param name="inValues">IN匹配的值列表</param>
         /// <param name="updateFields">更新的字段列表</param>
         /// <returns></returns>
-        public Exception Update (string matchSql, Dictionary<string, object> parameters,
-            TEntity entityToUpdate, params string[] updateFields) {
-            if (null == entityToUpdate || !matchSql.IsValid ()) {
+        public virtual Exception UpdateIn<T> (T condition, string inField,
+            IEnumerable<object> inValues, params string[] updateFields) where T : class, new () {
+            if (null == condition || !inField.IsValid () || inValues.IsEmpty ()) {
                 return Exceptions.InvalidParam;
             }
 
             return Execute ((conn, trans) => {
-                var success = conn.UpdateWhere<TEntity> (trans, entityToUpdate, updateFields, matchSql, parameters);
-                return success ? null : Exceptions.Failure;
+                var cmd = new UpdateCommand (conn, trans) {
+                UpdateFields = updateFields
+                };
+
+                var (matchSql, parameters) = GetInMatch<T> (conn, inField, inValues);
+                var predicate = new SqlPredicate<T> (condition, matchSql, parameters);
+
+                return cmd.UpdateWhere<T> (predicate) ? null : Exceptions.Failure;
             });
         }
 
         /// <summary>
         /// 根据已有实体删除匹配的实体列表
         /// </summary>
-        /// <param name="entityToDelete"></param>
-        /// <param name="matchSql">WHERE语句或AND或OR</param>
-        /// <param name="matchFields">匹配的字段列表</param>
+        /// <param name="predicate">WHERE匹配谓词实例</param>
+        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public Exception Delete (TEntity entityToDelete, string matchSql, params string[] matchFields) {
-            if (null == entityToDelete || !matchSql.IsValid ()) {
+        public Exception Delete<T> (SqlPredicate<T> predicate) where T : class, new () {
+            if (null == predicate) {
                 return Exceptions.InvalidParam;
             }
 
             return Execute ((conn, trans) => {
-                var success = conn.DeleteWhere<TEntity> (trans, entityToDelete, matchSql, matchFields);
-                return success ? null : Exceptions.Failure;
+                var cmd = new DeleteCommand (conn, trans);
+                return cmd.DeleteWhere<T> (predicate) ? null : Exceptions.Failure;
             });
         }
 
         /// <summary>
-        /// 根据已有实体删除匹配的实体列表
+        /// 批量删除所有匹配的项列表
         /// </summary>
-        /// <param name="matchSql">匹配的SQL</param>
-        /// <param name="parameters">参数值</param>
+        /// <param name="inField">IN匹配的字段名</param>
+        /// <param name="inValues">IN匹配的值列表</param>
         /// <returns></returns>
-        public Exception Delete (string matchSql, Dictionary<string, object> parameters) {
-            if (!matchSql.IsValid ()) {
+        public virtual Exception DeleteIn<T> (string inField, IEnumerable<object> inValues)
+        where T : class, new () {
+            if (!inField.IsValid () || inValues.IsEmpty ()) {
                 return Exceptions.InvalidParam;
             }
 
             return Execute ((conn, trans) => {
-                var success = conn.DeleteWhere<TEntity> (trans, matchSql, parameters);
-                return success ? null : Exceptions.Failure;
+                var cmd = new DeleteCommand (conn, trans);
+                var (matchSql, parameters) = GetInMatch<T> (conn, inField, inValues);
+                var predicate = new SqlPredicate<T> (matchSql, parameters);
+
+                return cmd.DeleteWhere<T> (predicate) ? null : Exceptions.Failure;
             });
         }
+
+        /// <summary>
+        /// 获取IN匹配SQL
+        /// </summary>
+        /// <param name="inField">IN匹配的字段名</param>
+        /// <param name="inValues">IN匹配的值列表</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        private (string, Dictionary<string, object>) GetInMatch<T> (IDbConnection conn,
+            string inField, IEnumerable<object> inValues) {
+            //var matchSql = "{0} in {1}";
+            var matchSql = conn.GetMatchExpression<T> (inField, MatchType.In);
+
+            var parameters = new Dictionary<string, object> {
+                    [inField] = inValues?.ToArray (),
+                };
+
+            return (matchSql, parameters);
+        }
+
+        /// <summary>
+        /// 执行SQL
+        /// </summary>
+        /// <param name="sql">SQL语句</param>
+        /// <param name="param">参数</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public Exception Execute (string sql, object param = null) =>
+            Execute ((conn, trans) => {
+                conn.Execute (sql, param, trans);
+                return null;
+            });
 
         /// <summary>
         /// 查询
         /// </summary>
         /// <param name="queryFunc">查询方法</param>
+        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        private (IEnumerable<TEntity>, Exception) Query (Func < IDbConnection, (IEnumerable<TEntity>, Exception) > queryFunc) {
+        private (long Count, IEnumerable<T> Items, Exception Exception) Query<T> (
+            Func < IDbConnection, (long, IEnumerable<T>, Exception) > queryFunc)
+        where T : class, new () {
             using (var conn = _DbProvider.GetConnection ()) {
                 conn.Open ();
 
                 try {
                     return queryFunc (conn);
                 } catch (Exception ex) {
-                    return (null, ex);
+                    return (0, null, ex);
                 } finally {
                     conn.Close ();
                 }

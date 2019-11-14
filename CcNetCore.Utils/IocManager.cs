@@ -6,8 +6,8 @@ using Autofac.Core;
 using Autofac.Core.Lifetime;
 using Autofac.Extensions.DependencyInjection;
 using Autofac.Extras.DynamicProxy;
-using Microsoft.Extensions.DependencyInjection;
 using CcNetCore.Utils.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CcNetCore.Utils {
     /// <summary>

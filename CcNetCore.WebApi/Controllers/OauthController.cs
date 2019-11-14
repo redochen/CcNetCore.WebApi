@@ -4,6 +4,7 @@ using CcNetCore.Application;
 using CcNetCore.Application.Interfaces;
 using CcNetCore.Application.Models;
 using CcNetCore.Common;
+using CcNetCore.Domain.Dtos;
 using CcNetCore.Utils;
 using CcNetCore.WebApi.Extensions;
 using Microsoft.AspNetCore.Http;
@@ -17,7 +18,7 @@ namespace CcNetCore.WebApi.Controllers {
     [ApiController]
     public class OauthController : ControllerBase, IApiController {
         //自动装载属性（必须为public，否则自动装载失败）
-        public IUserService _Service { get; set; }
+        public IAccountService _Account { get; set; }
 
         /// <summary>
         /// Cookie选项
@@ -30,19 +31,19 @@ namespace CcNetCore.WebApi.Controllers {
         };
 
         /// <summary>
-        ///
+        /// 身份认证
         /// </summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
         /// <returns></returns>
-        [HttpGet]
+        [HttpGet ("auth")]
         public IResult Auth (string username, string password) {
-            var verfiyResult = _Service.Verify (new VerifyUserModel {
+            var verfiyResult = _Account.Verify (new VerifyUserDto {
                 UserName = username,
                     PasswordHash = password
             });
 
-            if (verfiyResult.Code != (int) ErrorCode.Success) {
+            if (!verfiyResult.IsSuccess ()) {
                 if (verfiyResult.Exception is NotFoundException) {
                     return Results.InvalidIdentity;
                 } else {
@@ -78,7 +79,9 @@ namespace CcNetCore.WebApi.Controllers {
             //HttpContext.Session.SetString (Constants.KEY_ACCESS_TOKEN, token);
             HttpContext.Response.Cookies.Append (Constants.KEY_ACCESS_TOKEN, token, _CookieOptions);
 
-            return ErrorCode.Success.ToResult ();
+            var result = ErrorCode.Success.ToResult<Result<string>> ();
+            result.Data = token;
+            return result;
         }
     }
 }

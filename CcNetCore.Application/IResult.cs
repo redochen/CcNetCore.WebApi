@@ -31,6 +31,14 @@ namespace CcNetCore.Application {
     /// </summary>
     public static class IResultExtension {
         /// <summary>
+        /// 是否成功
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public static bool IsSuccess (this IResult result) =>
+            result.Code == (int) ErrorCode.Success;
+
+        /// <summary>
         /// 设置错误信息
         /// </summary>
         /// <param name="result"></param>
@@ -65,6 +73,19 @@ namespace CcNetCore.Application {
             result.SetError (ErrorCode.Failed);
             if (error.IsValid ()) {
                 result.Message = error;
+            }
+        }
+
+        /// <summary>
+        /// 设置结果
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="res"></param>
+        public static void SetResult (this IResult result, IResult res) {
+            if (res != null) {
+                result.Code = res.Code;
+                result.Message = res.Message;
+                result.Exception = res.Exception;
             }
         }
     }

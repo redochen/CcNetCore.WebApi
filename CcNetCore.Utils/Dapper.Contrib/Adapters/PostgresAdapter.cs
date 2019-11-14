@@ -76,11 +76,15 @@ namespace Dapper.Contrib.Extensions {
         }
 
         /// <summary>
-        /// gets a column equality to a parameter.
+        /// gets a column matches a parameter.
         /// </summary>
-        /// <param name="column">The column's property info object.</param>
-        public string GetColumnNameEqualsValue (PropertyInfo column) =>
-            $"\"{column.GetColumnName()}\" = @{column.Name}";
+        /// <param name="columnName">列名</param>
+        /// <param name="paraName">参数名</param>
+        /// <param name="matchType">匹配类型</param>
+        public string GetColumnMatchesValue (string columnName, string paraName, MatchType matchType = MatchType.Equal) {
+            var expression = MatchExps[matchType];
+            return expression.Replace ("Column", columnName).Replace ("Param", paraName);
+        }
 
         /// <summary>
         /// 添加列定义
@@ -99,6 +103,15 @@ namespace Dapper.Contrib.Extensions {
         }
 
         /// <summary>
+        /// 获取排序的sql
+        /// </summary>
+        /// <param name="sbSql"></param>
+        /// <param name="orderByFields">排序字段集合</param>
+        public void GetOrderBySql (StringBuilder sbSql, IEnumerable<SqlOrder> orderByFields) {
+            //TODO:
+        }
+
+        /// <summary>
         /// 获取分页查询Sql
         /// </summary>
         /// <param name="sbSql"></param>
@@ -107,5 +120,23 @@ namespace Dapper.Contrib.Extensions {
         public void GetPageQuerySql (StringBuilder sbSql, int? pageSize, int? pageIndex) {
             //TODO:
         }
+
+        private static readonly Dictionary<MatchType, string> MatchExps =
+            new Dictionary<MatchType, string> {
+                [MatchType.Equal] = "\"Column\" = @Param",
+                [MatchType.NotEqual] = "\"Column\" <> @Param",
+                [MatchType.Greater] = "\"Column\" > @Param",
+                [MatchType.GreaterOrEqual] = "\"Column\" >= @Param",
+                [MatchType.Less] = "\"Column\" < @Param",
+                [MatchType.LessOrEqual] = "\"Column\" <= @Param",
+                [MatchType.In] = "\"Column\" in @Param",
+                [MatchType.NotIn] = "\"Column\" not in @Param",
+                [MatchType.Like] = "\"Column\" like @Param",
+                [MatchType.NotLike] = "\"Column\" not like @Param",
+                [MatchType.BeginsWith] = "\"Column\" like @Param",
+                [MatchType.NotBeginsWith] = "\"Column\" not like @Param",
+                [MatchType.EndsWith] = "\"Column\" like @Param",
+                [MatchType.NotEndsWith] = "\"Column\" not like @Param",
+            };
     }
 }

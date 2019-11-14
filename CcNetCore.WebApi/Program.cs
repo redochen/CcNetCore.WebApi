@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore;
+﻿using System;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 
 namespace CcNetCore.WebApi {
     public class Program {
@@ -7,8 +9,17 @@ namespace CcNetCore.WebApi {
             CreateWebHostBuilder (args).Build ().Run ();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder (string[] args) =>
-            WebHost.CreateDefaultBuilder (args)
-            .UseStartup<Startup> ();
+        public static IWebHostBuilder CreateWebHostBuilder (string[] args) {
+            var configuration = new ConfigurationBuilder ()
+                .SetBasePath (Environment.CurrentDirectory)
+                .AddJsonFile ("host.json")
+                .Build ();
+
+            var urls = configuration["urls"];
+
+            return WebHost.CreateDefaultBuilder (args)
+                .UseUrls (urls)
+                .UseStartup<Startup> ();
+        }
     }
 }

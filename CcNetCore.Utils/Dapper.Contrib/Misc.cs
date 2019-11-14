@@ -19,11 +19,6 @@ using DataException = System.InvalidOperationException;
 #endif
 
 namespace Dapper.Contrib.Extensions {
-    public static class MatchSql {
-        public const string AND = "and";
-        public const string OR = "or";
-    }
-
     /// <summary>
     /// The Dapper.Contrib extensions for Dapper
     /// </summary>
@@ -171,6 +166,21 @@ namespace Dapper.Contrib.Extensions {
 
             TypeTableName[type.TypeHandle] = name;
             return name;
+        }
+
+        /// <summary>
+        /// ��ȡƥ�����
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="paramName">������</param>
+        /// <param name="matchType">ƥ������</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static string GetMatchExpression<T> (this IDbConnection connection, string paramName, MatchType matchType) {
+            var adapter = GetFormatter (connection);
+            var column = GetColumnName<T> (paramName);
+            var matchExp = adapter.GetColumnMatchesValue (column, paramName, matchType);
+            return matchExp;
         }
 
         private static class ProxyGenerator {

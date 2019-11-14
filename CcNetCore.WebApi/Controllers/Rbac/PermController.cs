@@ -1,5 +1,6 @@
 using CcNetCore.Application.Models;
 using CcNetCore.Common;
+using CcNetCore.Domain.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CcNetCore.WebApi.Controllers {
@@ -8,33 +9,30 @@ namespace CcNetCore.WebApi.Controllers {
     /// </summary>
     [Route ("api/rbac/perm")]
     [ApiController]
-    public class PermController : BaseController<PermModel>, IApiController {
+    public class PermController : SysController<PermDto>, IApiController {
         /// <summary>
         /// 创建
         /// </summary>
-        /// <param name="model">模型</param>
+        /// <param name="dto">模型</param>
         /// <returns></returns>
-        [Route ("add")]
-        [HttpPost]
-        public BaseResult Create ([FromBody] CreatePermModel model) => base.Create (model);
+        [HttpPost ("add")]
+        public Result Create ([FromBody] CreatePermDto dto) => base.Create (dto);
 
         /// <summary>
         /// 修改
         /// </summary>
-        /// <param name="model">模型</param>
+        /// <param name="dto">模型</param>
         /// <returns></returns>
-        [Route ("update")]
-        [HttpPost]
-        public BaseResult Update ([FromBody] UpdatePermModel model) => base.Update (model);
+        [HttpPost ("update")]
+        public Result Update ([FromBody] UpdatePermDto dto) => base.Update (dto);
 
         /// <summary>
         /// 删除
         /// </summary>
-        /// <param name="model">模型</param>
+        /// <param name="dto">模型</param>
         /// <returns></returns>
-        [Route ("delete")]
-        [HttpPost]
-        public BaseResult Delete ([FromBody] DeletePermModel model) => base.Delete (model);
+        [HttpPost ("delete")]
+        public Result Delete ([FromBody] BatchDto dto) => base.Delete (dto);
 
         /// <summary>
         /// 查询权限列表
@@ -49,12 +47,11 @@ namespace CcNetCore.WebApi.Controllers {
         /// <param name="menuGuid"></param>
         /// <param name="actionCode"></param>
         /// <returns></returns>
-        [Route ("get")]
-        [HttpGet]
-        public PageQueryResult<PermModel> GetPermissions (int pageSize = 0, int pageNo = 1,
+        [HttpGet ("list")]
+        public PageResult<PermDto> GetList (int pageSize = 0, int pageNo = 1,
             string uid = "", Status? status = null, string permCode = "", string permName = "",
             PermType? permType = null, string menuGuid = "", string actionCode = "") {
-            var cond = new PermModel {
+            var cond = new PermDto {
             Uid = uid,
             Status = status,
             Code = permCode,

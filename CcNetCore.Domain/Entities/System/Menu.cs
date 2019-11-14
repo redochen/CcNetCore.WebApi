@@ -14,12 +14,14 @@ namespace CcNetCore.Domain.Entities {
         /// <summary>
         /// 菜单名称
         /// </summary>
-        [Required, Column ("menu_name", VarLength = 50, Unicode = true)]
+        [Required]
+        [Column ("menu_name", VarLength = 50, Unicode = true)]
         public string Name { get; set; }
 
         /// <summary>
         /// 链接地址
         /// </summary>
+        [Required]
         [Column ("menu_url", VarLength = 500, Unicode = true)]
         public string Url { get; set; }
 

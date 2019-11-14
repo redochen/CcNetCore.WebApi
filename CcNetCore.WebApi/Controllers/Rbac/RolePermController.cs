@@ -1,6 +1,7 @@
 using CcNetCore.Application.Interfaces;
 using CcNetCore.Application.Models;
 using CcNetCore.Common;
+using CcNetCore.Domain.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CcNetCore.WebApi.Controllers {
@@ -9,37 +10,18 @@ namespace CcNetCore.WebApi.Controllers {
     /// </summary>
     [Route ("api/rbac/role_perm")]
     [ApiController]
-    public class RolePermController : BaseController<RolePermModel>, IApiController {
+    public class RolePermController : SysController<RolePermDto>, IApiController {
         //自动装载属性（必须为public，否则自动装载失败）
         public new IRolePermService _Service { get; set; }
 
         /// <summary>
-        /// 创建
-        /// </summary>
-        /// <param name="model">模型</param>
-        /// <returns></returns>
-        [Route ("add")]
-        [HttpPost]
-        public BaseResult Create ([FromBody] CreateRolePermModel model) => base.Create (model);
-
-        /// <summary>
-        /// 删除
-        /// </summary>
-        /// <param name="model">模型</param>
-        /// <returns></returns>
-        [Route ("delete")]
-        [HttpPost]
-        public BaseResult Remove ([FromBody] DeleteRolePermModel model) => base.Delete (model);
-
-        /// <summary>
         /// 批量保存
         /// </summary>
-        /// <param name="model">模型</param>
+        /// <param name="dto">模型</param>
         /// <returns></returns>
-        [Route ("save")]
-        [HttpPost]
-        public BaseResult Save ([FromBody] SaveRolePermModel model) =>
-            HandleRequest<BaseResult> ((userID) => _Service.Save (userID, model));
+        [HttpPost ("save")]
+        public Result Save ([FromBody] SaveRolePermDto dto) =>
+            HandleRequest<Result> ((userID) => _Service.Save (userID, dto));
 
         /// <summary>
         /// 查询角色权限列表
@@ -51,11 +33,10 @@ namespace CcNetCore.WebApi.Controllers {
         /// <param name="roleCode"></param>
         /// <param name="permCode"></param>
         /// <returns></returns>
-        [Route ("get")]
-        [HttpGet]
-        public PageQueryResult<RolePermModel> GetRolePermissions (int pageSize = 0, int pageNo = 1,
+        [HttpGet ("list")]
+        public PageResult<RolePermDto> GetList (int pageSize = 0, int pageNo = 1,
             string uid = "", Status? status = null, string roleCode = "", string permCode = "") {
-            var cond = new RolePermModel {
+            var cond = new RolePermDto {
             Uid = uid,
             Status = status,
             RoleCode = roleCode,

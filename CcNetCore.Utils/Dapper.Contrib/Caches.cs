@@ -23,7 +23,7 @@ namespace Dapper.Contrib.Extensions {
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, string> GetQueries = new ConcurrentDictionary<RuntimeTypeHandle, string> ();
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, string> TypeTableName = new ConcurrentDictionary<RuntimeTypeHandle, string> ();
         private static readonly ConcurrentDictionary<TypeConverterAttribute, TypeConverter> TypeConverters = new ConcurrentDictionary<TypeConverterAttribute, TypeConverter> ();
-
+        private static readonly ConcurrentDictionary<PropertyInfo, ColumnAttribute> PropertyColumns = new ConcurrentDictionary<PropertyInfo, ColumnAttribute> ();
         private static List<PropertyInfo> ColumnNameProperitiesCache (Type type) {
             if (ColumnNameProperties.TryGetValue (type.TypeHandle, out IEnumerable<PropertyInfo> pi)) {
                 return pi.ToList ();
@@ -122,6 +122,19 @@ namespace Dapper.Contrib.Extensions {
             var properties = type.GetProperties ().Where (IsWriteable).ToArray ();
             TypeProperties[type.TypeHandle] = properties;
             return properties.ToList ();
+        }
+
+        private static ColumnAttribute PropertyColumnsCache (PropertyInfo property) {
+            //var handle = property.PropertyType.TypeHandle;
+            if (PropertyColumns.TryGetValue (property, out ColumnAttribute attr)) {
+                return attr;
+            }
+
+            attr = ColumnNameProperitiesCache (property.ReflectedType) ?
+                .Where (p => p.Name.Equals (property.Name)) ?
+                .Select (p => p.GetAttribute<ColumnAttribute> (true)).FirstOrDefault ();
+            PropertyColumns[property] = attr;
+            return attr;
         }
     }
 }

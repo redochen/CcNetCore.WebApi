@@ -20,6 +20,26 @@
     }
 
     /// <summary>
+    /// 审核状态
+    /// </summary>
+    public enum AuditStatus {
+        /// <summary>
+        /// 未指定
+        /// </summary>
+        All = -1,
+
+        /// <summary>
+        /// 未审核
+        /// </summary>
+        UnAudited = 0,
+
+        /// <summary>
+        /// 已审核
+        /// </summary>
+        Audited = 1,
+    }
+
+    /// <summary>
     /// 用户类型
     /// </summary>
     public enum UserType {

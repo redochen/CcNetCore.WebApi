@@ -68,11 +68,15 @@ namespace Dapper.Contrib.Extensions {
         }
 
         /// <summary>
-        /// gets a column equality to a parameter.
+        /// gets a column matches a parameter.
         /// </summary>
-        /// <param name="column">The column's property info object.</param>
-        public string GetColumnNameEqualsValue (PropertyInfo column) =>
-            $"\"{column.GetColumnName()}\" = @{column.Name}";
+        /// <param name="columnName">列名</param>
+        /// <param name="paraName">参数名</param>
+        /// <param name="matchType">匹配类型</param>
+        public string GetColumnMatchesValue (string columnName, string paraName, MatchType matchType = MatchType.Equal) {
+            var expression = MatchExps[matchType];
+            return expression.Replace ("Column", columnName).Replace ("Param", paraName);
+        }
 
         /// <summary>
         /// 添加列定义
@@ -114,11 +118,26 @@ namespace Dapper.Contrib.Extensions {
 
             if (defaultValue != null) {
                 if (columnType.Contains ("char")) {
-                    sbSql.AppendFormat ("DEFAULT '{0}'", defaultValue.ToString (), Chars.空格);
+                    sbSql.Append ($"DEFAULT '{defaultValue.ToString()}'", Chars.空格);
                 } else {
-                    sbSql.AppendFormat ("DEFAULT {0}", defaultValue, Chars.空格);
+                    sbSql.Append ($"DEFAULT {defaultValue}", Chars.空格);
                 }
             }
+        }
+
+        /// <summary>
+        /// 获取排序的sql
+        /// </summary>
+        /// <param name="sbSql"></param>
+        /// <param name="sortFields">排序字段集合</param>
+        public void GetOrderBySql (StringBuilder sbSql, IEnumerable<SqlOrder> sortFields) {
+            if (sortFields.IsEmpty ()) {
+                return;
+            }
+
+            var fields = sortFields.Select (x => x.Field + (x.Asc ? " asc" : " desc"));
+            var orderBy = string.Join (',', fields);
+            sbSql.Append ($" order by {orderBy} ");
         }
 
         /// <summary>
@@ -129,7 +148,7 @@ namespace Dapper.Contrib.Extensions {
         /// <param name="pageIndex">页码，从0开始</param>
         public void GetPageQuerySql (StringBuilder sbSql, int? pageSize, int? pageIndex) {
             var size = (pageSize ?? 0);
-            var index = (pageIndex ?? -1);
+            var index = (pageIndex ?? 0);
 
             if (size <= 0 || index < 0) {
                 return;
@@ -173,8 +192,27 @@ namespace Dapper.Contrib.Extensions {
             return unicode ? $"NCHAR({len})" : $"CHARACTER({len})";
         }
 
-        private static readonly Dictionary<string, Type[]> TypeMaps = new Dictionary<string, Type[]> () {
-            ["INTEGER"] = new Type[] { typeof (bool), typeof (int), typeof (Int64), typeof (Int16), typeof (uint), typeof (UInt64), typeof (UInt16) }, ["REAL"] = new Type[] { typeof (float), typeof (double), typeof (decimal) },
-        };
+        private static readonly Dictionary<string, Type[]> TypeMaps =
+            new Dictionary<string, Type[]> () {
+                ["INTEGER"] = new Type[] { typeof (bool), typeof (int), typeof (Int64), typeof (Int16), typeof (uint), typeof (UInt64), typeof (UInt16) }, ["REAL"] = new Type[] { typeof (float), typeof (double), typeof (decimal) },
+            };
+
+        private static readonly Dictionary<MatchType, string> MatchExps =
+            new Dictionary<MatchType, string> {
+                [MatchType.Equal] = "\"Column\" = @Param",
+                [MatchType.NotEqual] = "\"Column\" <> @Param",
+                [MatchType.Greater] = "\"Column\" > @Param",
+                [MatchType.GreaterOrEqual] = "\"Column\" >= @Param",
+                [MatchType.Less] = "\"Column\" < @Param",
+                [MatchType.LessOrEqual] = "\"Column\" <= @Param",
+                [MatchType.In] = "\"Column\" in @Param",
+                [MatchType.NotIn] = "\"Column\" not in @Param",
+                [MatchType.Like] = "\"Column\" like @Param",
+                [MatchType.NotLike] = "\"Column\" not like @Param",
+                [MatchType.BeginsWith] = "\"Column\" like @Param",
+                [MatchType.NotBeginsWith] = "\"Column\" not like @Param",
+                [MatchType.EndsWith] = "\"Column\" like @Param",
+                [MatchType.NotEndsWith] = "\"Column\" not like @Param",
+            };
     }
 }

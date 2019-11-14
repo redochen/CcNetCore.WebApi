@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using CcNetCore.Common;
 using Dapper.Contrib.Extensions;
 
 namespace CcNetCore.Domain.Entities {
@@ -28,7 +27,7 @@ namespace CcNetCore.Domain.Entities {
         /// 状态
         /// </summary>
         [Column ("status", Order = 101)]
-        public Status? Status { get; set; }
+        public int? Status { get; set; }
 
         /// <summary>
         /// 删除标识
@@ -59,5 +58,19 @@ namespace CcNetCore.Domain.Entities {
         /// </summary>
         [Column ("update_user", Order = 106)]
         public int UpdateUser { get; set; }
+
+        /// <summary>
+        /// 过滤条件：最小创建时间（含）
+        /// </summary>
+        /// <value></value>
+        [Ignore]
+        public string MinCreateTime { get; set; }
+
+        /// <summary>
+        /// 过滤条件：最大创建时间（含）
+        /// </summary>
+        /// <value></value>
+        [Ignore]
+        public string MaxCreateTime { get; set; }
     }
 }

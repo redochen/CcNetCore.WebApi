@@ -1,5 +1,6 @@
 using CcNetCore.Application.Models;
 using CcNetCore.Common;
+using CcNetCore.Domain.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CcNetCore.WebApi.Controllers {
@@ -8,33 +9,30 @@ namespace CcNetCore.WebApi.Controllers {
     /// </summary>
     [Route ("api/rbac/role")]
     [ApiController]
-    public class RoleController : BaseController<RoleModel>, IApiController {
+    public class RoleController : SysController<RoleDto>, IApiController {
         /// <summary>
         /// 创建
         /// </summary>
-        /// <param name="model">模型</param>
+        /// <param name="dto">模型</param>
         /// <returns></returns>
-        [Route ("add")]
-        [HttpPost]
-        public BaseResult Create ([FromBody] CreateRoleModel model) => base.Create (model);
+        [HttpPost ("add")]
+        public Result Create ([FromBody] CreateRoleDto dto) => base.Create (dto);
 
         /// <summary>
         /// 修改
         /// </summary>
-        /// <param name="model">模型</param>
+        /// <param name="dto">模型</param>
         /// <returns></returns>
-        [Route ("update")]
-        [HttpPost]
-        public BaseResult Update ([FromBody] UpdateRoleModel model) => base.Update (model);
+        [HttpPost ("update")]
+        public Result Update ([FromBody] UpdateRoleDto dto) => base.Update (dto);
 
         /// <summary>
         /// 删除
         /// </summary>
-        /// <param name="model">模型</param>
+        /// <param name="dto">模型</param>
         /// <returns></returns>
-        [Route ("delete")]
-        [HttpPost]
-        public BaseResult Delete ([FromBody] DeleteRoleModel model) => base.Delete (model);
+        [HttpPost ("delete")]
+        public Result Delete ([FromBody] BatchDto dto) => base.Delete (dto);
 
         /// <summary>
         /// 查询角色列表
@@ -48,12 +46,11 @@ namespace CcNetCore.WebApi.Controllers {
         /// <param name="isSuperAdmin"></param>
         /// <param name="isBuiltin"></param>
         /// <returns></returns>
-        [Route ("get")]
-        [HttpGet]
-        public PageQueryResult<RoleModel> GetRoles (int pageSize = 0, int pageNo = 1,
+        [HttpGet ("list")]
+        public PageResult<RoleDto> GetList (int pageSize = 0, int pageNo = 1,
             string uid = "", Status? status = null, string code = "", string name = "",
             bool? isSuperAdmin = null, bool? isBuiltin = null) {
-            var cond = new RoleModel {
+            var cond = new RoleDto {
             Uid = uid,
             Status = status,
             Code = code,

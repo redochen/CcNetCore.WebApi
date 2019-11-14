@@ -40,12 +40,12 @@ namespace CcNetCore.Common {
 
         /// <summary>
         /// 路由数据之请求ID
-        /// </summary>
+        /// /// </summary>
         public const string ROUTE_DATA_KEY_REQ_ID = "req_rand";
 
         /// <summary>
-        /// 路由数据之计时器
+        /// 空UID
         /// </summary>
-        public const string ROUTE_DATA_KEY_TIMER = "timer";
+        public const string UID_EMPTY = "0";
     }
 }

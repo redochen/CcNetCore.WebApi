@@ -6,6 +6,7 @@ namespace CcNetCore.Utils {
     /// </summary>
     public static class Exceptions {
         public static readonly FailureException Failure = new FailureException ();
+        public static readonly NotImplementedException NotImplemented = new NotImplementedException ();
         public static readonly InvalidParamException InvalidParam = new InvalidParamException ();
         public static readonly NotFoundException NotFound = new NotFoundException ();
         public static readonly AlreadyExistsException AlreadyExists = new AlreadyExistsException ();
@@ -18,6 +19,13 @@ namespace CcNetCore.Utils {
     /// </summary>
     public class FailureException : Exception {
         public FailureException () : base ("操作失败") { }
+    }
+
+    /// <summary>
+    /// 未实现
+    /// </summary>
+    public class NotImplementedException : Exception {
+        public NotImplementedException () : base ("未实现") { }
     }
 
     /// <summary>
